@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="main.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <h1><span class="h1">Intel 8080</span></h1>
+    <button onclick="step()">Step</button>
+    <button onclick="run(1)">Animate</button>
+    <button onclick="run(100)">Run</button>
+    <button onclick="basic()">Reset</button>
+    <!-- <button onclick="selectProgram()">RESET</button> -->
+    <!--     Program:
+    <select name="program" id="program" onchange="selectProgram()">
+        <option value="0">hello</option>
+        <option value="1">memcpy</option>
+    </select> -->
+    <div class="content">
+        <div>
+            <h2>Code</h2>
+            <ul id="code" class="uibox">
+            </ul>
+        </div>
+        <div style="margin-left: 10px">
+            <h2>Terminal</h2>
+            <pre id="output" tabindex="0" onkeydown="keydown(event)" onkeypress="keypress(event)">
+            </pre>
+            <div style="display: flex; flex-direction: row;">
+                <div>
+                    <h2>Registers</h2>
+                    <table id="registers" class="uibox">
+                        <tr>
+                            <th>B</th>
+                            <th>C</th>
+                            <th>D</th>
+                            <th>E</th>
+                            <th>H</th>
+                            <th>L</th>
+                            <th>M</th>
+                            <th>A</th>
+                        </tr>
+                        <tr id="register-values">
+                            <td>00</td>
+                            <td>00</td>
+                            <td>00</td>
+                            <td>00</td>
+                            <td>00</td>
+                            <td>00</td>
+                            <td>00</td>
+                            <td>00</td>
+                        </tr>
+                    </table>
+                </div>
+                <div style="margin-left: 20px">
+                    <h2>Flags</h2>
+                    <div id='flags' class="uibox"></div>
+                </div>
+                <div style="margin-left: 20px">
+                    <h2>Cycles</h2>
+                    <div id='cycles' class="uibox">0</div>
+                </div>
+                <!-- <div style="margin-left: 20px">
+                    <h2>Instructions</h2>
+                    <div id='instructions'>0</div>
+                </div> -->
+            </div>
+
+            <div style="display: flex; flex-direction: row;">
+
+                <div>
+                    <h2>Memory</h2>
+                    Page: <input id="page" type="number" min="0" max="255" value="1"
+                        style="width: 4em; margin-bottom: 10px;" onchange="refreshui()">
+                    <div id="memory" class="uibox">
+                    </div>
+                </div>
+
+                <div>
+                    <h2>Stack</h2>
+                    <ul id="stack" class="uibox">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

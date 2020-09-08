@@ -1,0 +1,36 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.instructionSize = exports.instructionTable = void 0;
+exports.instructionTable = ["NOP", "LXI", "STAX", "INX", "INR", "DCR", "MVI", "RLC", "NOP", "DAD", "LDAX", "DCX", "INR", "DCR", "MVI", "RRC",
+    "NOP", "LXI", "STAX", "INX", "INR", "DCR", "MVI", "RAL", "NOP", "DAD", "LDAX", "DCX", "INR", "DCR", "MVI", "RAR",
+    "NOP", "LXI", "SHLD", "INX", "INR", "DCR", "MVI", "DAA", "NOP", "DAD", "LHLD", "DCX", "INR", "DCR", "MVI", "CMA",
+    "NOP", "LXI", "STA", "INX", "INR", "DCR", "MVI", "STC", "NOP", "DAD", "LDA", "DCX", "INR", "DCR", "MVI", "CMC",
+    "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV",
+    "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV",
+    "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV",
+    "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "HLT", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV",
+    "ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADC", "ADC", "ADC", "ADC", "ADC", "ADC", "ADC", "ADC",
+    "SUB", "SUB", "SUB", "SUB", "SUB", "SUB", "SUB", "SUB", "SBB", "SBB", "SBB", "SBB", "SBB", "SBB", "SBB", "SBB",
+    "ANA", "ANA", "ANA", "ANA", "ANA", "ANA", "ANA", "ANA", "XRA", "XRA", "XRA", "XRA", "XRA", "XRA", "XRA", "XRA",
+    "ORA", "ORA", "ORA", "ORA", "ORA", "ORA", "ORA", "ORA", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP",
+    "RNZ", "POP", "JNZ", "JMP", "CNZ", "PUSH", "ADI", "RST", "RZ", "RET", "JZ", "JMP", "CZ", "CALL", "ACI", "RST",
+    "RNC", "POP", "JNC", "OUT", "CNC", "PUSH", "SUI", "RST", "RC", "RET", "JC", "IN", "CC", "CALL", "SBI", "RST",
+    "RPO", "POP", "JPO", "XTHL", "CPO", "PUSH", "ANI", "RST", "RPE", "PCHL", "JPE", "XCHG", "CPE", "CALL", "XRI", "RST",
+    "RP", "POP", "JP", "DI", "CP", "PUSH", "ORI", "RST", "RM", "SPHL", "JM", "EI", "CM", "CALL", "CPI", "RST"];
+exports.instructionSize = [1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1,
+    1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1,
+    1, 3, 3, 1, 1, 1, 2, 1, 1, 1, 3, 1, 1, 1, 2, 1,
+    1, 3, 3, 1, 1, 1, 2, 1, 1, 1, 3, 1, 1, 1, 2, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 3, 3, 3, 1, 2, 1, 1, 1, 3, 3, 3, 3, 2, 1,
+    1, 1, 3, 2, 3, 1, 2, 1, 1, 1, 3, 2, 3, 3, 2, 1,
+    1, 1, 3, 1, 3, 1, 2, 1, 1, 1, 3, 1, 3, 3, 2, 1,
+    1, 1, 3, 1, 3, 1, 2, 1, 1, 1, 3, 1, 3, 3, 2, 1];
+//# sourceMappingURL=instructions.js.map

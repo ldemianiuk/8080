@@ -1,0 +1,241 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #27292c;
+    color: white;
+}
+
+* {
+    border-color: #43464b;
+}
+
+.content {
+    display: flex;
+    flex-direction: row;
+}
+
+ul#code {
+    font-family: 'Courier New', Courier, monospace;
+    list-style: none;
+    border-style: solid;
+    padding: 0;
+    width: 14em;
+    font-weight: bold;
+    padding: 0;
+}
+
+ul#code li.current {
+    border-top-style: solid;
+    border-bottom-style: solid;
+    border-width: 2px;
+    background-color: rgba(255, 165, 0, 0.5);
+    border-color: rgba(255, 165, 0, 0.4);
+
+}
+
+ul#code li span {
+    display: inline-block;
+    padding: 5px;
+}
+
+.address {
+    font-weight: normal;
+}
+
+table#registers {
+    margin-left: 10px;
+    border-style: solid;
+    font-family: 'Courier New', Courier, monospace;
+    border-collapse: collapse;
+}
+
+table#registers th,td {
+    border-left-style: solid;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+
+ul#stack {
+    font-family: 'Courier New', Courier, monospace;
+    list-style: none;
+    border-style: solid;
+    width: 10em;
+    margin-left: 10px;
+}
+
+div#memory {
+    letter-spacing: 0;
+    border-style: solid;
+    margin-left: 10px;
+    padding: 10px;
+    letter-spacing: 0.2em;
+    white-space: nowrap;
+}
+
+@font-face {
+    font-family: 'VT323';
+    src: url('VT323-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'DEC Terminal';
+    src: url('DECTERM.ttf') format('truetype');
+}
+
+#output {
+    /* font-family: 'DEC Terminal'; */
+    font-family: 'VT323';
+    font-size: 150%;
+    width: 80ch;
+    border-style: solid;
+    min-height: 1em;
+    line-height: 1em;
+    height: 20em;
+    overflow: auto;
+    /* background: #3e32a2;
+    color: #d6cef4; */
+    background: #151617;
+    color: #33ff33;
+
+}
+
+/* #output::-webkit-scrollbar {
+    width: 12px;               
+  }
+  #output::-webkit-scrollbar-track {
+    background: #7c71da;        
+  }
+  #output::-webkit-scrollbar-thumb {
+    background-color: orange;    
+    border-radius: 10px;       
+    border: 3px solid #7c71da;  
+  } */
+
+#output:focus {
+    outline-width: 3px;
+    outline-style: outset;
+    /* outline-color: #7c71da; */
+    outline-color: rgb(137, 141, 146);
+}
+
+div#flags {
+    border-style: solid;
+    padding: 10px;
+}
+
+div#cycles {
+    border-style: solid;
+    padding: 10px;
+}
+
+div#instructions {
+    border-style: solid;
+}
+
+.blinking-cursor {
+  color: #2E3D48;
+  -webkit-animation: 1s blink step-end infinite;
+  -moz-animation: 1s blink step-end infinite;
+  -ms-animation: 1s blink step-end infinite;
+  -o-animation: 1s blink step-end infinite;
+  animation: 1s blink step-end infinite;
+}
+
+@keyframes blink {
+  from, to {
+    background-color: transparent;
+  }
+  50% {
+    background-color: #33ff33;
+  }
+}
+
+@-moz-keyframes blink {
+  from, to {
+    background-color: transparent;
+  }
+  50% {
+    background-color: #33ff33;
+  }
+}
+
+@-webkit-keyframes blink {
+  from, to {
+    background-color: transparent;
+  }
+  50% {
+    background-color: #33ff33;
+  }
+}
+
+@-ms-keyframes blink {
+  from, to {
+    background-color: transparent;
+  }
+  50% {
+    background-color: #33ff33;
+  }
+}
+
+@-o-keyframes blink {
+  from, to {
+    background-color: transparent;
+  }
+  50% {
+    background-color: #33ff33;
+  }
+}
+
+
+button {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 120%;
+    font-weight: bold;
+    background-color: rgba(255, 165, 80, 0.9);
+    border-style: outset;
+    border-color: rgba(255, 165, 80, 0.9);
+    border-width: 2px;
+    border-radius: 5px;
+    color: black;
+    text-shadow: 1px 1px gray;
+}
+
+button:hover {
+    background-color: rgba(255, 165, 0, 0.8);
+    border-color: rgba(255, 165, 0, 0.8);
+    cursor: pointer;
+}
+
+button:focus {
+    border-width: 4px;
+    outline: none;
+}
+
+button:active {
+    border-style: inset;
+}
+
+h1 {
+    color: white;
+    text-align: center;
+    border-style: solid;
+    overflow: hidden;
+}
+
+h1:before {
+    color: #62676e;
+    content: "==================================================================================================================================";
+    float: left;
+    width: 0;
+    white-space: nowrap;
+}
+
+.h1 {
+    background-color: #1e1f22;
+    color: white;
+    padding: 1ch;
+}
+
+.uibox {
+    background-color: #1e1f22;
+}
