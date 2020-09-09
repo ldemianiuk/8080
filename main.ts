@@ -11,7 +11,7 @@ class Flags {
 const B = 0, C = 1, D = 2, E = 3, H = 4, L = 5, M = 6, A = 7, F = 8;
 
 function WORD(hi: number, lo: number): number {
-    return (hi << 8) + lo;
+    return (hi << 8) | lo;
 }
 
 function LO(n: number): number {
@@ -41,6 +41,8 @@ class e8080 {
     instructions: number;
     input: number[];
     output: string;
+    trace: string[];
+    break: number;
 
     instructionHandlers = {
         "ACI": (op, d8) => {
@@ -52,7 +54,7 @@ class e8080 {
             this.setReg(A, result);
             this.setFlags(result);
             this.setCarry(result);
-            this.status.A = ((a & 0x0f) + (b & 0x0f) + 1 > 0x0f);
+            this.status.A = ((a & 0x0f) + (b & 0x0f) + c > 0x0f);
         },
         "ADC": op => {
             const a = this.getReg(A);
@@ -63,7 +65,7 @@ class e8080 {
             this.setReg(A, result);
             this.setFlags(result);
             this.setCarry(result);
-            this.status.A = ((a & 0x0f) + (b & 0x0f) + 1 > 0x0f);
+            this.status.A = ((a & 0x0f) + (b & 0x0f) + c > 0x0f);
         },
         "ADD": op => {
             const a = this.getReg(A);
@@ -86,6 +88,7 @@ class e8080 {
             this.setAC(a, b);
         },
         "ANA": op => {
+            // this.status.A = ((this.getReg(A) | this.getReg(SRC(op))) & 0x08) !== 0; // undocumented
             const result = this.getReg(A) & this.getReg(SRC(op));
             this.setReg(A, result);
             this.setFlags(result);
@@ -93,6 +96,7 @@ class e8080 {
             this.status.A = false; // undocumented
         },
         "ANI": (op, d8) => {
+            this.status.A = ((this.getReg(A) | d8) & 0x08) !== 0; // undocumented
             const result = this.getReg(A) & d8;
             this.setReg(A, result);
             this.setFlags(result);
@@ -144,7 +148,7 @@ class e8080 {
             const result = value + WORD(this.getReg(H), this.getReg(L));
             this.setReg(H, HI(result));
             this.setReg(L, LO(result));
-            this.status.C = result > 0xffff;
+            this.status.C = (result & 0x10000) !== 0;
         },
         "DCR": op => {
             const result = this.getReg(DST(op)) - 1;
@@ -274,7 +278,7 @@ class e8080 {
                     this.output += String.fromCharCode(ch);
                 }
                 var element = document.getElementById('output');
-                element.innerHTML = this.output + '<span class="blinking-cursor"> </span>';
+                element.innerHTML = escapeHtml(this.output) + '<span class="blinking-cursor"> </span>';
                 element.scrollTop = element.scrollHeight;
             }
             else {
@@ -421,7 +425,7 @@ class e8080 {
     }
 
     private sub(a: number, b: number): number {
-        const b_ = b ^ 0xff
+        const b_ = b ^ 0xff;
         const result = a + b_ + 1;
         this.setFlags(result);
         this.setCarry(result);
@@ -518,7 +522,7 @@ class e8080 {
 
     reset(): void {
         this.registers.fill(0);
-        this.memory.fill(0);
+        this.memory.fill(0x79);
         this.sp[0] = 0xf000;
         this.pc[0] = 0;
         this.status.S = this.status.Z = this.status.A = this.status.P = this.status.C = false;
@@ -527,6 +531,8 @@ class e8080 {
         this.instructions = 0;
         this.input = [];
         this.output = "";
+        this.trace = new Array(0x10000);
+        this.break = -1;
     }
 
     step(): void {
@@ -537,6 +543,8 @@ class e8080 {
         const instr = instructionTable[opcode];
         const len = instructionSize[opcode];
         const args = this.memory.slice(this.pc[0] + 1, this.pc[0] + len);
+
+        this.trace[this.pc[0]] = displayWord(this.pc[0]) + ': ' + this.disasm(this.pc[0]);
 
         this.pc[0] += len;
 
@@ -612,6 +620,21 @@ function basic() {
     refreshui();
 }
 
+function ex1() {
+    clearTimeout(runtimer);
+    runtimer = null;
+    document.getElementById('output').innerHTML = '';
+    emulator.reset();
+    emulator.memory.set([0x76], 0);
+    emulator.memory.set([0xc3, 0x06, 0xec], 0x05);
+    emulator.memory.set(cpm, 0xec06);
+    emulator.memory.set(ex1com, 0x100);
+    emulator.pc[0] = 0x100;
+    refreshui();
+}
+
+
+
 function tinybasic() {
     clearTimeout(runtimer);
     runtimer = null;
@@ -675,8 +698,13 @@ function run(speed: number): void {
     document.getElementById('output').focus();
     const t0 = new Date().getTime();
     function fn() {
-        for (let i = 0; i < speed; i++)
+        for (let i = 0; i < speed; i++) {
             emulator.step();
+            if (emulator.pc[0] === emulator.break) {
+                refreshui();
+                return;
+            }
+        }
         refreshui();
         if (emulator.running) {
             runtimer = setTimeout(fn, 0);
@@ -732,6 +760,22 @@ function displayChar(ch: number): string {
     }
 }
 
+function displayByte(n: number): string {
+    return ('00' + n.toString(16)).slice(-2);
+}
+
+function displayWord(n: number): string {
+    return ('0000' + n.toString(16)).slice(-4);
+}
+
+function escapeHtml(str: string): string {
+    return str
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+ }
 
 function keydown(ev: KeyboardEvent) {
     if (ev.keyCode === 8) {
@@ -762,5 +806,6 @@ window.onload = function (ev: Event) {
     basic();
     //tinybasic();
     //emulator.memory.set(programs[1], 0);
+    //ex1();
     refreshui();
 }
