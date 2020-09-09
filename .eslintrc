@@ -4,7 +4,7 @@
   "env": {"browser": true},
   "extends": "eslint:recommended",
   "rules": {
-    "no-unused-vars": ["error", {"argsIgnorePattern": "^_"}],
+    "no-unused-vars": ["warn", {"argsIgnorePattern": "^_"}],
     "no-dupe-class-members": "off",
    "quotes": ["error", "single"]
   }
