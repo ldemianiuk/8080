@@ -42,7 +42,6 @@ class e8080 {
     input: number[];
     output: string;
     trace: string[];
-    break: number;
 
     instructionHandlers = {
         "ACI": (op, d8) => {
@@ -269,17 +268,17 @@ class e8080 {
         },
         "OUT": (op, d8) => {
             if (d8 === 1) {
-                const ch = this.getReg(A);                
+                const ch = this.getReg(A);
                 if (ch === 13) return;
                 if (ch === 8) {
-                    this.output = this.output.substr(0, this.output.length-1);
+                    this.output = this.output.substr(0, this.output.length - 1);
                 }
                 else {
                     this.output += String.fromCharCode(ch);
                 }
-                var element = document.getElementById('output');
-                element.innerHTML = escapeHtml(this.output) + '<span class="blinking-cursor"> </span>';
-                element.scrollTop = element.scrollHeight;
+                let outpt = document.getElementById('output');
+                outpt.innerHTML = escapeHtml(emulator.output) + '<span class="blinking-cursor"> </span>';
+                outpt.scrollTop = outpt.scrollHeight;
             }
             else {
                 console.log("OUT " + d8);
@@ -532,7 +531,6 @@ class e8080 {
         this.input = [];
         this.output = "";
         this.trace = new Array(0x10000);
-        this.break = -1;
     }
 
     step(): void {
@@ -596,8 +594,8 @@ class e8080 {
 }
 
 let emulator = new e8080();
-
 let runtimer;
+let breakpoint: number = -1;
 
 function cpudiag() {
     document.getElementById('output').innerHTML = '';
@@ -688,6 +686,8 @@ function selectProgram() {
 }
 
 function step(): void {
+    clearTimeout(runtimer);
+    runtimer = null;
     emulator.step();
     refreshui();
 }
@@ -700,7 +700,7 @@ function run(speed: number): void {
     function fn() {
         for (let i = 0; i < speed; i++) {
             emulator.step();
-            if (emulator.pc[0] === emulator.break) {
+            if (emulator.pc[0] === breakpoint) {
                 refreshui();
                 return;
             }
@@ -723,6 +723,11 @@ function reset() {
     refreshui();
 }
 
+function setbreakpoint(): void {
+    console.log((<HTMLInputElement>document.getElementById('breakpoint')).value);
+    breakpoint = parseInt((<HTMLInputElement>document.getElementById('breakpoint')).value, 16);
+}
+
 function refreshui(): void {
     document.getElementById('code').innerHTML = emulator.disasm(emulator.pc[0], 20).map(instr => '' + instr + '').join('');
     document.getElementById('register-values').innerHTML = [0, 1, 2, 3, 4, 5, 6, 7].map(r => '<td>' + ('00' + emulator.getReg(r).toString(16)).slice(-2) + '</td>').join('');
@@ -742,7 +747,7 @@ function refreshui(): void {
         Array.from(Array(16).keys()).map(i => '<b>' + ('0000' + (page * 0x100 + i * 16).toString(16).toUpperCase()).slice(-4) + '</b> ' + Array.from(Array(16).keys()).map(j =>
             ('00' + (emulator.memory[page * 0x100 + i * 16 + j]).toString(16)).slice(-2)
         ).join('&#8239;') + ' ' +
-        Array.from(Array(16).keys()).map(j => displayChar(emulator.memory[page * 0x100 + i * 16 + j])).join('')
+            Array.from(Array(16).keys()).map(j => displayChar(emulator.memory[page * 0x100 + i * 16 + j])).join('')
         ).join('<br>');
     document.getElementById('flags').innerHTML = "S:" + (+emulator.status.S) + " Z:" + (+emulator.status.Z) + " A:" + (+emulator.status.A) + " P:" + (+emulator.status.P) + " C:" + (+emulator.status.C);
     //JSON.stringify(emulator.status).replace(/["{}]/g,'').replace(/,/g,' ');
@@ -770,12 +775,12 @@ function displayWord(n: number): string {
 
 function escapeHtml(str: string): string {
     return str
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;");
- }
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 function keydown(ev: KeyboardEvent) {
     if (ev.keyCode === 8) {
@@ -809,3 +814,4 @@ window.onload = function (ev: Event) {
     //ex1();
     refreshui();
 }
+

@@ -240,3 +240,8 @@ h1:before {
 .uibox {
     background-color: #1e1f22;
 }
+
+input {
+  background-color: #27292c;
+  color: white;
+}
