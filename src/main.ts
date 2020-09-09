@@ -2,7 +2,7 @@ import { instructionTable, instructionSize, instructionCycles, instructionsDisas
 import { cpu_diag, cpm } from 'cpudiag';
 import { ex1com } from 'ex1';
 import { msbasic } from 'msbasic';
-import { precom } from 'pre';
+//import { precom } from 'pre';
 import { tinybas } from 'tinybas';
 
 class Flags {
@@ -35,7 +35,7 @@ function DST(opcode: number): number {
     return (opcode >> 3) & 0b111;
 }
 
-type Handlers = Record<string, (op: number, arg1?: number, arg2?: number) => void>;
+type Handlers = Record<string, (_op: number, _arg1?: number, _arg2?: number) => void>;
 
 
 class e8080 {
@@ -52,7 +52,7 @@ class e8080 {
     trace: string[];
 
     instructionHandlers: Handlers = {
-        "ACI": (op, d8) => {
+        'ACI': (op, d8) => {
             const a = this.getReg(A);
             const b = d8;
             const c = this.status.C ? 1 : 0;
@@ -63,7 +63,7 @@ class e8080 {
             this.setCarry(result);
             this.status.A = ((a & 0x0f) + (b & 0x0f) + c > 0x0f);
         },
-        "ADC": op => {
+        'ADC': op => {
             const a = this.getReg(A);
             const b = this.getReg(SRC(op));
             const c = this.status.C ? 1 : 0;
@@ -74,7 +74,7 @@ class e8080 {
             this.setCarry(result);
             this.status.A = ((a & 0x0f) + (b & 0x0f) + c > 0x0f);
         },
-        "ADD": op => {
+        'ADD': op => {
             const a = this.getReg(A);
             const b = this.getReg(SRC(op));
 
@@ -84,7 +84,7 @@ class e8080 {
             this.setCarry(result);
             this.setAC(a, b);
         },
-        "ADI": (op, d8) => {
+        'ADI': (op, d8) => {
             const a = this.getReg(A);
             const b = d8;
 
@@ -94,7 +94,7 @@ class e8080 {
             this.setCarry(result);
             this.setAC(a, b);
         },
-        "ANA": op => {
+        'ANA': op => {
             // this.status.A = ((this.getReg(A) | this.getReg(SRC(op))) & 0x08) !== 0; // undocumented
             const result = this.getReg(A) & this.getReg(SRC(op));
             this.setReg(A, result);
@@ -102,7 +102,7 @@ class e8080 {
             this.status.C = false;
             this.status.A = false; // undocumented
         },
-        "ANI": (op, d8) => {
+        'ANI': (op, d8) => {
             //this.status.A = ((this.getReg(A) | d8) & 0x08) !== 0; // undocumented
             const result = this.getReg(A) & d8;
             this.setReg(A, result);
@@ -110,26 +110,26 @@ class e8080 {
             this.status.C = false;
             this.status.A = false; // undocumented
         },
-        "CALL": (opcode, lo, hi) => { this.call(hi, lo, 0) },
-        "CC": (opcode, lo, hi) => { if (this.status.C) this.call(hi, lo) },
-        "CM": (opcode, lo, hi) => { if (this.status.S) this.call(hi, lo) },
-        "CMA": op => {
+        'CALL': (opcode, lo, hi) => { this.call(hi, lo, 0) },
+        'CC': (opcode, lo, hi) => { if (this.status.C) this.call(hi, lo) },
+        'CM': (opcode, lo, hi) => { if (this.status.S) this.call(hi, lo) },
+        'CMA': _op => {
             this.setReg(A, this.getReg(A) ^ 0xff);
         },
-        "CMC": op => { this.status.C = !this.status.C },
-        "CMP": op => {
+        'CMC': _op => { this.status.C = !this.status.C },
+        'CMP': op => {
             this.sub(this.getReg(A), this.getReg(SRC(op)));
         },
-        "CNC": (opcode, lo, hi) => { if (!this.status.C) this.call(hi, lo) },
-        "CNZ": (opcode, lo, hi) => { if (!this.status.Z) this.call(hi, lo) },
-        "CP": (opcode, lo, hi) => { if (!this.status.S) this.call(hi, lo) },
-        "CPE": (opcode, lo, hi) => { if (this.status.P) this.call(hi, lo) },
-        "CPI": (op, d8) => {
+        'CNC': (opcode, lo, hi) => { if (!this.status.C) this.call(hi, lo) },
+        'CNZ': (opcode, lo, hi) => { if (!this.status.Z) this.call(hi, lo) },
+        'CP': (opcode, lo, hi) => { if (!this.status.S) this.call(hi, lo) },
+        'CPE': (opcode, lo, hi) => { if (this.status.P) this.call(hi, lo) },
+        'CPI': (op, d8) => {
             this.sub(this.getReg(A), d8);
         },
-        "CPO": (opcode, lo, hi) => { if (!this.status.P) this.call(hi, lo) },
-        "CZ": (opcode, lo, hi) => { if (this.status.Z) this.call(hi, lo) },
-        "DAA": op => {
+        'CPO': (opcode, lo, hi) => { if (!this.status.P) this.call(hi, lo) },
+        'CZ': (opcode, lo, hi) => { if (this.status.Z) this.call(hi, lo) },
+        'DAA': _op => {
             let a = this.getReg(A);
             if ((a & 0x0f) > 9 || this.status.A) {
                 a = a + 6;
@@ -142,7 +142,7 @@ class e8080 {
                 this.status.C = true;
             }
         },
-        "DAD": op => {
+        'DAD': op => {
             let value: number;
             if (op === 0x39) {
                 value = this.sp[0];
@@ -157,13 +157,13 @@ class e8080 {
             this.setReg(L, LO(result));
             this.status.C = (result & 0x10000) !== 0;
         },
-        "DCR": op => {
+        'DCR': op => {
             const result = this.getReg(DST(op)) - 1;
             this.setReg(DST(op), result);
             this.setFlags(result);
             this.setAC(this.getReg(DST(op)), 0xff);
         },
-        "DCX": op => {
+        'DCX': op => {
             if (op === 0x3B) {
                 this.sp[0]--;
             }
@@ -175,13 +175,13 @@ class e8080 {
                 this.setReg(lo, LO(result));
             }
         },
-        "DI": op => { /* not implemented */ },
-        "EI": op => { /* not implemented */ },
-        "HLT": op => {
+        'DI': _op => { /* not implemented */ },
+        'EI': _op => { /* not implemented */ },
+        'HLT': _op => {
             this.running = false;
             this.pc[0]--;
         },
-        "IN": (op, d8) => {
+        'IN': (op, d8) => {
             switch (d8) {
                 case 0:
                     if (this.input.length > 0) this.setReg(A, 0xff);
@@ -191,16 +191,16 @@ class e8080 {
                     this.setReg(A, this.input.shift());
                     break;
                 default:
-                    console.log("IN " + d8);
+                    console.log('IN ' + d8);
             }
         },
-        "INR": op => {
+        'INR': op => {
             const result = this.getReg(DST(op)) + 1;
             this.setReg(DST(op), result);
             this.setFlags(result);
             this.setAC(this.getReg(DST(op)), 1);
         },
-        "INX": op => {
+        'INX': op => {
             if (op === 0x33) {
                 this.sp[0]++;
             }
@@ -212,19 +212,19 @@ class e8080 {
                 this.setReg(lo, LO(result));
             }
         },
-        "JC": (op, lo, hi) => { if (this.status.C) this.pc[0] = WORD(hi, lo); },
-        "JM": (op, lo, hi) => { if (this.status.S) this.pc[0] = WORD(hi, lo); },
-        "JMP": (op, lo, hi) => { this.pc[0] = WORD(hi, lo); },
-        "JNC": (op, lo, hi) => { if (!this.status.C) this.pc[0] = WORD(hi, lo); },
-        "JNZ": (op, lo, hi) => { if (!this.status.Z) this.pc[0] = WORD(hi, lo); },
-        "JP": (op, lo, hi) => { if (!this.status.S) this.pc[0] = WORD(hi, lo); },
-        "JPE": (op, lo, hi) => { if (this.status.P) this.pc[0] = WORD(hi, lo); },
-        "JPO": (op, lo, hi) => { if (!this.status.P) this.pc[0] = WORD(hi, lo); },
-        "JZ": (op, lo, hi) => { if (this.status.Z) this.pc[0] = WORD(hi, lo); },
-        "LDA": (op, lo, hi) => {
+        'JC': (op, lo, hi) => { if (this.status.C) this.pc[0] = WORD(hi, lo); },
+        'JM': (op, lo, hi) => { if (this.status.S) this.pc[0] = WORD(hi, lo); },
+        'JMP': (op, lo, hi) => { this.pc[0] = WORD(hi, lo); },
+        'JNC': (op, lo, hi) => { if (!this.status.C) this.pc[0] = WORD(hi, lo); },
+        'JNZ': (op, lo, hi) => { if (!this.status.Z) this.pc[0] = WORD(hi, lo); },
+        'JP': (op, lo, hi) => { if (!this.status.S) this.pc[0] = WORD(hi, lo); },
+        'JPE': (op, lo, hi) => { if (this.status.P) this.pc[0] = WORD(hi, lo); },
+        'JPO': (op, lo, hi) => { if (!this.status.P) this.pc[0] = WORD(hi, lo); },
+        'JZ': (op, lo, hi) => { if (this.status.Z) this.pc[0] = WORD(hi, lo); },
+        'LDA': (op, lo, hi) => {
             this.setReg(A, this.memory[WORD(hi, lo)]);
         },
-        "LDAX": op => {
+        'LDAX': op => {
             let addr: number;
             // LDAX B
             if (op === 0x0A) {
@@ -236,11 +236,11 @@ class e8080 {
             }
             this.setReg(A, this.memory[addr]);
         },
-        "LHLD": (op, lo, hi) => {
+        'LHLD': (op, lo, hi) => {
             this.setReg(L, this.memory[WORD(hi, lo)]);
             this.setReg(H, this.memory[(WORD(hi, lo) + 1) & 0xffff]);
         },
-        "LXI": (op, lo, hi) => {
+        'LXI': (op, lo, hi) => {
             if (op === 0x31) {
                 this.sp[0] = WORD(hi, lo);
             }
@@ -251,28 +251,28 @@ class e8080 {
                 this.setReg(reglo, lo);
             }
         },
-        "MOV": op => {
+        'MOV': op => {
             this.setReg(DST(op), this.getReg(SRC(op)));
         },
-        "MVI": (op, d8) => {
+        'MVI': (op, d8) => {
             this.setReg(DST(op), d8);
         },
-        "NOP": op => { },
-        "ORA": op => {
+        'NOP': _op => { },
+        'ORA': op => {
             const result = this.getReg(A) | this.getReg(SRC(op));
             this.setReg(A, result);
             this.setFlags(result);
             this.status.C = false;
             this.status.A = false; // undocumented
         },
-        "ORI": (op, d8) => {
+        'ORI': (op, d8) => {
             const result = this.getReg(A) | d8;
             this.setReg(A, result);
             this.setFlags(result);
             this.status.C = false;
             this.status.A = false; // undocumented
         },
-        "OUT": (op, d8) => {
+        'OUT': (op, d8) => {
             if (d8 === 1) {
                 const ch = this.getReg(A);
                 if (ch === 13) return;
@@ -287,13 +287,13 @@ class e8080 {
                 outpt.scrollTop = outpt.scrollHeight;
             }
             else {
-                console.log("OUT " + d8);
+                console.log('OUT ' + d8);
             }
         },
-        "PCHL": op => {
+        'PCHL': _op => {
             this.pc[0] = WORD(this.getReg(H), this.getReg(L));
         },
-        "POP": op => {
+        'POP': op => {
             const value = WORD(this.memory[this.sp[0] + 1], this.memory[this.sp[0]]);
             this.sp[0] += 2;
             // POP PSW
@@ -306,7 +306,7 @@ class e8080 {
                 this.setReg(DST(op) + 1, LO(value));
             }
         },
-        "PUSH": op => {
+        'PUSH': op => {
             let value: number;
             // PUSH PSW
             if (op === 0xf5) {
@@ -319,58 +319,58 @@ class e8080 {
             this.memory[this.sp[0]] = LO(value);
             this.memory[this.sp[0] + 1] = HI(value);
         },
-        "RAL": op => {
+        'RAL': _op => {
             const a = this.getReg(A);
             const c = +this.status.C;
             this.status.C = (a & 0b10000000) !== 0;
             this.setReg(A, (a << 1) | c);
         },
-        "RAR": op => {
+        'RAR': _op => {
             const a = this.getReg(A);
             const c = +this.status.C;
             this.status.C = (a & 0b1) !== 0;
             this.setReg(A, (a >> 1) | (c << 7));
         },
-        "RC": op => { if (this.status.C) this.ret(); },
-        "RET": op => { this.ret(0); },
-        "RLC": op => {
+        'RC': _op => { if (this.status.C) this.ret(); },
+        'RET': _op => { this.ret(0); },
+        'RLC': _op => {
             const a = this.getReg(A);
             this.status.C = (a & 0b10000000) !== 0;
             this.setReg(A, (a << 1) | (+this.status.C));
         },
-        "RM": op => { if (this.status.S) this.ret(); },
-        "RNC": op => { if (!this.status.C) this.ret(); },
-        "RNZ": op => { if (!this.status.Z) this.ret(); },
-        "RP": op => { if (!this.status.S) this.ret(); },
-        "RPE": op => { if (this.status.P) this.ret(); },
-        "RPO": op => { if (!this.status.P) this.ret(); },
-        "RRC": op => {
+        'RM': _op => { if (this.status.S) this.ret(); },
+        'RNC': _op => { if (!this.status.C) this.ret(); },
+        'RNZ': _op => { if (!this.status.Z) this.ret(); },
+        'RP': _op => { if (!this.status.S) this.ret(); },
+        'RPE': _op => { if (this.status.P) this.ret(); },
+        'RPO': _op => { if (!this.status.P) this.ret(); },
+        'RRC': _op => {
             const a = this.getReg(A);
             this.status.C = (a & 0b1) !== 0;
             this.setReg(A, (a >> 1) | ((+this.status.C) << 7));
         },
-        "RST": op => {
+        'RST': op => {
             const num = op & 0b111000;
             this.call(0, num, 0);
         },
-        "RZ": op => { if (this.status.Z) this.ret(); },
-        "SBB": op => {
+        'RZ': _op => { if (this.status.Z) this.ret(); },
+        'SBB': op => {
             this.setReg(A, this.sub(this.getReg(A), this.getReg(SRC(op)) + (+this.status.C)));
         },
-        "SBI": (op, d8) => {
+        'SBI': (op, d8) => {
             this.setReg(A, this.sub(this.getReg(A), d8 + (+this.status.C)));
         },
-        "SHLD": (op, lo, hi) => {
+        'SHLD': (op, lo, hi) => {
             this.memory[WORD(hi, lo)] = this.getReg(L);
             this.memory[(WORD(hi, lo) + 1) & 0xffff] = this.getReg(H);
         },
-        "SPHL": op => {
+        'SPHL': _op => {
             this.sp[0] = WORD(this.getReg(H), this.getReg(L));
         },
-        "STA": (op, lo, hi) => {
+        'STA': (op, lo, hi) => {
             this.memory[WORD(hi, lo)] = this.getReg(A);
         },
-        "STAX": op => {
+        'STAX': op => {
             let addr: number;
             // STAX B
             if (op === 0x02) {
@@ -382,16 +382,16 @@ class e8080 {
             }
             this.memory[addr] = this.getReg(A);
         },
-        "STC": op => {
+        'STC': _op => {
             this.status.C = true;
         },
-        "SUB": op => {
+        'SUB': op => {
             this.setReg(A, this.sub(this.getReg(A), this.getReg(SRC(op))));
         },
-        "SUI": (op, d8) => {
+        'SUI': (op, d8) => {
             this.setReg(A, this.sub(this.getReg(A), d8));
         },
-        "XCHG": op => {
+        'XCHG': _op => {
             const d = this.getReg(D);
             const e = this.getReg(E);
             this.setReg(D, this.getReg(H));
@@ -399,21 +399,21 @@ class e8080 {
             this.setReg(H, d);
             this.setReg(L, e);
         },
-        "XRA": op => {
+        'XRA': op => {
             const result = this.getReg(A) ^ this.getReg(SRC(op));
             this.setReg(A, result);
             this.setFlags(result);
             this.status.C = false;
             this.status.A = false; // undocumented
         },
-        "XRI": (op, d8) => {
+        'XRI': (op, d8) => {
             const result = this.getReg(A) ^ d8;
             this.setReg(A, result);
             this.setFlags(result);
             this.status.C = false;
             this.status.A = false; // undocumented
         },
-        "XTHL": op => {
+        'XTHL': _op => {
             const l = this.getReg(L);
             const h = this.getReg(H);
             this.setReg(L, this.memory[this.sp[0]]);
@@ -531,7 +531,7 @@ class e8080 {
         this.cycles = 0;
         this.instructions = 0;
         this.input = [];
-        this.output = "";
+        this.output = '';
         this.trace = new Array(0x10000);
     }
 
@@ -552,15 +552,15 @@ class e8080 {
             this.instructionHandlers[instr](opcode, ...Array.from(args));
         }
         else {
-            console.log("ERROR: " + instr);
+            console.log('ERROR: ' + instr);
         }
 
         this.cycles += instructionCycles[opcode];
         this.instructions++;
     }
 
-    disasm(addr: number): string;
-    disasm(addr: number, num: number): string[];
+    disasm(_addr: number): string;
+    disasm(_addr: number, _num: number): string[];
     disasm(addr: any, num?: any): any {
         const opcode: number = this.memory[addr];
         let instr: string = instructionsDisasm[opcode];
@@ -590,7 +590,7 @@ class e8080 {
     }
 
     showFlags(): void {
-        console.log("S:" + this.status.S + " Z:" + this.status.Z + " A:" + this.status.A + " P:" + this.status.P + " C:" + this.status.C);
+        console.log('S:' + this.status.S + ' Z:' + this.status.Z + ' A:' + this.status.A + ' P:' + this.status.P + ' C:' + this.status.C);
     }
 
 }
@@ -669,10 +669,10 @@ const programs = [
         0xC2, 0x13, 0x00,	/* jnz     loop        ;Jump to 'loop:' if the zero-flag is not set. */
         0xC9,	/* ret */
         0x00, 0x00,
-        0x6d, 0x65, 0x6d, 0x63, 0x70, 0x79 /* "memcpy" */
+        0x6d, 0x65, 0x6d, 0x63, 0x70, 0x79 /* 'memcpy' */
     ]];
 
-//const data = [..."memcpy"].map(s => s.charCodeAt(0));
+//const data = [...'memcpy'].map(s => s.charCodeAt(0));
 
 
 emulator.memory.set(programs[0], 0);
@@ -751,8 +751,8 @@ function refreshui(): void {
         ).join('&#8239;') + ' ' +
             Array.from(Array(16).keys()).map(j => displayChar(emulator.memory[page * 0x100 + i * 16 + j])).join('')
         ).join('<br>');
-    document.getElementById('flags').innerHTML = "S:" + (+emulator.status.S) + " Z:" + (+emulator.status.Z) + " A:" + (+emulator.status.A) + " P:" + (+emulator.status.P) + " C:" + (+emulator.status.C);
-    //JSON.stringify(emulator.status).replace(/["{}]/g,'').replace(/,/g,' ');
+    document.getElementById('flags').innerHTML = 'S:' + (+emulator.status.S) + ' Z:' + (+emulator.status.Z) + ' A:' + (+emulator.status.A) + ' P:' + (+emulator.status.P) + ' C:' + (+emulator.status.C);
+    //JSON.stringify(emulator.status).replace(/['{}]/g,'').replace(/,/g,' ');
     document.getElementById('cycles').innerHTML = emulator.cycles.toString();
     //document.getElementById('instructions').innerHTML = emulator.instructions.toString();
 }
@@ -777,11 +777,11 @@ function displayWord(n: number): string {
 
 function escapeHtml(str: string): string {
     return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/'/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 function keydown(ev: KeyboardEvent) {
@@ -808,7 +808,7 @@ function keypress(ev: KeyboardEvent) {
 }
 
 
-window.onload = function (ev: Event) {
+window.onload = function () {
     //cpudiag();
     basic();
     //tinybasic();
@@ -817,8 +817,9 @@ window.onload = function (ev: Event) {
     refreshui();
     document.getElementById('run').onclick = () => run(100);
     document.getElementById('animate').onclick = () => run(1);
-    document.getElementById('step').onclick = () => step();
-    document.getElementById('reset').onclick = () => cpudiag();
+    document.getElementById('step').onclick = step;
+    document.getElementById('reset').onclick = cpudiag;
+    document.getElementById('setbreakpoint').onclick = setbreakpoint;
     document.getElementById('output').onkeypress = keypress;
     document.getElementById('output').onkeydown = keydown;
 }

@@ -1,0 +1,11 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "env": {"browser": true},
+  "extends": "eslint:recommended",
+  "rules": {
+    "no-unused-vars": ["error", {"argsIgnorePattern": "^_"}],
+    "no-dupe-class-members": "off",
+   "quotes": ["error", "single"]
+  }
+}
