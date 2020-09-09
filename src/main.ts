@@ -1,4 +1,9 @@
-//import { instructionTable, instructionSize } from './instructions';
+import { instructionTable, instructionSize, instructionCycles, instructionsDisasm, parityCache } from 'instructions';
+import { cpu_diag, cpm } from 'cpudiag';
+import { ex1com } from 'ex1';
+import { msbasic } from 'msbasic';
+import { precom } from 'pre';
+import { tinybas } from 'tinybas';
 
 class Flags {
     S: boolean;
@@ -30,6 +35,9 @@ function DST(opcode: number): number {
     return (opcode >> 3) & 0b111;
 }
 
+type Handlers = Record<string, (op: number, arg1?: number, arg2?: number) => void>;
+
+
 class e8080 {
     memory: Uint8Array;
     registers: Uint8Array; // B, C, D, E, H, L, M, A
@@ -43,7 +51,7 @@ class e8080 {
     output: string;
     trace: string[];
 
-    instructionHandlers = {
+    instructionHandlers: Handlers = {
         "ACI": (op, d8) => {
             const a = this.getReg(A);
             const b = d8;
@@ -541,7 +549,7 @@ class e8080 {
         this.pc[0] += len;
 
         if (this.instructionHandlers[instr]) {
-            this.instructionHandlers[instr](opcode, ...args);
+            this.instructionHandlers[instr](opcode, ...Array.from(args));
         }
         else {
             console.log("ERROR: " + instr);
@@ -588,7 +596,7 @@ class e8080 {
 }
 
 let emulator = new e8080();
-let runtimer;
+let runtimer: number;
 let breakpoint: number = -1;
 
 function cpudiag() {
@@ -807,5 +815,11 @@ window.onload = function (ev: Event) {
     //emulator.memory.set(programs[1], 0);
     //ex1();
     refreshui();
+    document.getElementById('run').onclick = () => run(100);
+    document.getElementById('animate').onclick = () => run(1);
+    document.getElementById('step').onclick = () => step();
+    document.getElementById('reset').onclick = () => cpudiag();
+    document.getElementById('output').onkeypress = keypress;
+    document.getElementById('output').onkeydown = keydown;
 }
 

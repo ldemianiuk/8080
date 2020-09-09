@@ -8,13 +8,13 @@
 
 <body>
     <h1><span class="h1">Intel 8080</span></h1>
-    <button onclick="step()">Step</button>
-    <button onclick="run(1)">Animate</button>
-    <button onclick="run(100)">Run</button>
-    <button onclick="basic()">Reset</button>
+    <button id='step'>Step</button>
+    <button id='animate'>Animate</button>
+    <button id='run'>Run</button>
+    <button id='reset'>Reset</button>
     <form style="display: inline" action="#">
     Breakpoint: <input id="breakpoint" type="text">
-    <input type="submit" value="Set" onclick="setbreakpoint()">
+    <input id='setbreakpoint' type="submit" value="Set"">
     </form>
     <!-- <button onclick="selectProgram()">RESET</button> -->
     <!--     Program:
@@ -30,7 +30,7 @@
         </div>
         <div style="margin-left: 10px">
             <h2>Terminal</h2>
-            <pre id="output" tabindex="0" onkeydown="keydown(event)" onkeypress="keypress(event)">
+            <pre id="output" tabindex="0">
             </pre>
             <div style="display: flex; flex-direction: row;">
                 <div>

@@ -1,4 +1,4 @@
-const tinybas = [
+export const tinybas = [
     0XF3, 0x31, 0x00, 0x20, 0XC3, 0XEC, 0x08, 0X4C, 0XE3, 0XEF, 0XBE, 0XC3, 0x68, 0x00, 0X3E, 0X0D,
     0XF5, 0X3A, 0XA5, 0x08, 0XB7, 0XC3, 0X4C, 0x08, 0XCD, 0x01, 0x05, 0XE5, 0XC3, 0XBD, 0x04, 0x57,
     0X7C, 0XBA, 0XC0, 0X7D, 0XBB, 0XC9, 0x41, 0X4E, 0X1A, 0XFE, 0x20, 0XC0, 0x13, 0XC3, 0x28, 0x00,

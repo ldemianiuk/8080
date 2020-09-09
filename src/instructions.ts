@@ -1,4 +1,4 @@
-const instructionTable = ["NOP", "LXI", "STAX", "INX", "INR", "DCR", "MVI", "RLC", "NOP", "DAD", "LDAX", "DCX", "INR", "DCR", "MVI", "RRC",
+export const instructionTable = ["NOP", "LXI", "STAX", "INX", "INR", "DCR", "MVI", "RLC", "NOP", "DAD", "LDAX", "DCX", "INR", "DCR", "MVI", "RRC",
 "NOP", "LXI", "STAX", "INX", "INR", "DCR", "MVI", "RAL", "NOP", "DAD", "LDAX", "DCX", "INR", "DCR", "MVI", "RAR",
 "NOP", "LXI", "SHLD", "INX", "INR", "DCR", "MVI", "DAA", "NOP", "DAD", "LHLD", "DCX", "INR", "DCR", "MVI", "CMA",
 "NOP", "LXI", "STA", "INX", "INR", "DCR", "MVI", "STC", "NOP", "DAD", "LDA", "DCX", "INR", "DCR", "MVI", "CMC",
@@ -15,7 +15,7 @@ const instructionTable = ["NOP", "LXI", "STAX", "INX", "INR", "DCR", "MVI", "RLC
 "RPO", "POP", "JPO", "XTHL", "CPO", "PUSH", "ANI", "RST", "RPE", "PCHL", "JPE", "XCHG", "CPE", "CALL", "XRI", "RST",
 "RP", "POP", "JP", "DI", "CP", "PUSH", "ORI", "RST", "RM", "SPHL", "JM", "EI", "CM", "CALL", "CPI", "RST"];
 
-const instructionSize = [1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1,
+export  const instructionSize = [1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1,
 1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1,
 1, 3, 3, 1, 1, 1, 2, 1, 1, 1, 3, 1, 1, 1, 2, 1,
 1, 3, 3, 1, 1, 1, 2, 1, 1, 1, 3, 1, 1, 1, 2, 1,
@@ -32,7 +32,7 @@ const instructionSize = [1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1,
 1, 1, 3, 1, 3, 1, 2, 1, 1, 1, 3, 1, 3, 3, 2, 1,
 1, 1, 3, 1, 3, 1, 2, 1, 1, 1, 3, 1, 3, 3, 2, 1];
 
-const instructionsDisasm = ["NOP", "LXI B", "STAX B", "INX B", "INR B", "DCR B", "MVI B", "RLC", "NOP", "DAD B", "LDAX B", "DCX B", "INR C", "DCR C", "MVI C", "RRC",
+export const instructionsDisasm = ["NOP", "LXI B", "STAX B", "INX B", "INR B", "DCR B", "MVI B", "RLC", "NOP", "DAD B", "LDAX B", "DCX B", "INR C", "DCR C", "MVI C", "RRC",
 "NOP", "LXI D", "STAX D", "INX D", "INR D", "DCR D", "MVI D", "RAL", "NOP", "DAD D", "LDAX D", "DCX D", "INR E", "DCR E", "MVI E", "RAR",
 "NOP", "LXI H", "SHLD", "INX H", "INR H", "DCR H", "MVI H", "DAA", "NOP", "DAD H", "LHLD", "DCX H", "INR L", "DCR L", "MVI L", "CMA",
 "NOP", "LXI SP", "STA", "INX SP", "INR M", "DCR M", "MVI M", "STC", "NOP", "DAD SP", "LDA", "DCX SP", "INR A", "DCR A", "MVI A", "CMC",
@@ -49,7 +49,7 @@ const instructionsDisasm = ["NOP", "LXI B", "STAX B", "INX B", "INR B", "DCR B",
 "RPO", "POP H", "JPO", "XTHL", "CPO", "PUSH H", "ANI", "RST 4", "RPE", "PCHL", "JPE", "XCHG", "CPE", "CALL", "XRI", "RST 5",
 "RP", "POP PSW", "JP", "DI", "CP", "PUSH PSW", "ORI", "RST 6", "RM", "SPHL", "JM", "EI", "CM", "CALL", "CPI", "RST 7"];
 
-const instructionCycles = [
+export const instructionCycles = [
     4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4,
     4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4,
     4, 10, 16, 5, 5, 5, 7, 4, 4, 10, 16, 5, 5, 5, 7, 4,
@@ -68,6 +68,6 @@ const instructionCycles = [
     5, 10, 10, 4, 11, 11, 7, 11, 5, 5, 10, 4, 11, 17, 7, 11
 ];
 
-const parityCache = [
+export const parityCache = [
     true,false,false,true,false,true,true,false,false,true,true,false,true,false,false,true,false,true,true,false,true,false,false,true,true,false,false,true,false,true,true,false,false,true,true,false,true,false,false,true,true,false,false,true,false,true,true,false,true,false,false,true,false,true,true,false,false,true,true,false,true,false,false,true,false,true,true,false,true,false,false,true,true,false,false,true,false,true,true,false,true,false,false,true,false,true,true,false,false,true,true,false,true,false,false,true,true,false,false,true,false,true,true,false,false,true,true,false,true,false,false,true,false,true,true,false,true,false,false,true,true,false,false,true,false,true,true,false,false,true,true,false,true,false,false,true,true,false,false,true,false,true,true,false,true,false,false,true,false,true,true,false,false,true,true,false,true,false,false,true,true,false,false,true,false,true,true,false,false,true,true,false,true,false,false,true,false,true,true,false,true,false,false,true,true,false,false,true,false,true,true,false,true,false,false,true,false,true,true,false,false,true,true,false,true,false,false,true,false,true,true,false,true,false,false,true,true,false,false,true,false,true,true,false,false,true,true,false,true,false,false,true,true,false,false,true,false,true,true,false,true,false,false,true,false,true,true,false,false,true,true,false,true,false,false,true
 ];
