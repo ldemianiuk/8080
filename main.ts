@@ -95,7 +95,7 @@ class e8080 {
             this.status.A = false; // undocumented
         },
         "ANI": (op, d8) => {
-            this.status.A = ((this.getReg(A) | d8) & 0x08) !== 0; // undocumented
+            //this.status.A = ((this.getReg(A) | d8) & 0x08) !== 0; // undocumented
             const result = this.getReg(A) & d8;
             this.setReg(A, result);
             this.setFlags(result);
@@ -244,9 +244,7 @@ class e8080 {
             }
         },
         "MOV": op => {
-            const result = this.getReg(SRC(op));
-            this.setReg(DST(op), result);
-            // this.setFlags(result);
+            this.setReg(DST(op), this.getReg(SRC(op)));
         },
         "MVI": (op, d8) => {
             this.setReg(DST(op), d8);
@@ -452,11 +450,11 @@ class e8080 {
     }
 
     private setCarry(result: number): void {
-        this.status.C = (result & 0b100000000) !== 0;
+        this.status.C = (result & 0x100) !== 0;
     }
 
     private setFlags(result: number): void {
-        this.status.S = (result & 0b10000000) !== 0;
+        this.status.S = (result & 0x80) !== 0;
         this.status.Z = (result & 0xff) === 0;
 
         this.status.P = parityCache[result & 0xff];
@@ -475,18 +473,14 @@ class e8080 {
     }
 
 
-    private getBit(n: number, bit: number): number {
-        return (n & (1 << bit)) === 0 ? 0 : 1;
-    }
-
     getReg(reg: number): number {
         if (reg === F) {
             //S Z 0 A 0 P 1 C
-            const flags = +this.status.C + (1 << 1) + (+this.status.P << 2) + (0 << 3) + (+this.status.A << 4) + (0 << 5) + (+this.status.Z << 6) + (+this.status.S << 7);
+            const flags = +this.status.C | (1 << 1) | (+this.status.P << 2) | (0 << 3) | (+this.status.A << 4) | (0 << 5) | (+this.status.Z << 6) | (+this.status.S << 7);
             return flags;
         }
         else if (reg === M) {
-            return this.memory[(this.registers[H] << 8) + this.registers[L]];
+            return this.memory[WORD(this.registers[H], this.registers[L])];
         }
         else {
             return this.registers[reg];
@@ -503,7 +497,7 @@ class e8080 {
             this.status.S = (value & (1 << 7)) !== 0;
         }
         else if (reg === M) {
-            this.memory[(this.registers[H] << 8) | this.registers[L]] = value;
+            this.memory[WORD(this.registers[H], this.registers[L])] = value;
         }
         else {
             this.registers[reg] = value;
@@ -521,7 +515,7 @@ class e8080 {
 
     reset(): void {
         this.registers.fill(0);
-        this.memory.fill(0x79);
+        this.memory.fill(0);
         this.sp[0] = 0xf000;
         this.pc[0] = 0;
         this.status.S = this.status.Z = this.status.A = this.status.P = this.status.C = false;
