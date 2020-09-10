@@ -1,20 +1,32 @@
-import { cpu_diag, cpm } from 'cpudiag';
-import { ex1com } from 'ex1';
-import { msbasic } from 'msbasic';
-//import { precom } from 'pre';
-import { tinybas } from 'tinybas';
-import { e8080 } from 'e8080';
+import { cpu_diag, cpm } from './cpudiag';
+import { ex1com } from './ex1';
+import { msbasic } from './msbasic';
+//import { precom } from './pre';
+import { tinybas } from './tinybas';
+import { e8080 } from './e8080';
 import 'index.scss';
 
 
 let emulator = new e8080();
+let output = '';
+emulator.output$[1].subscribe(ch => {
+    if (ch === 13) return;
+    if (ch === 8) {
+        output = output.substr(0, output.length - 1);
+    }
+    else {
+        output += String.fromCharCode(ch);
+    }
+    let outpt = document.getElementById('output');
+    outpt.innerHTML = escapeHtml(output) + '<span class="blinking-cursor"> </span>';
+    outpt.scrollTop = outpt.scrollHeight;
+});
 let runtimer: number;
 let breakpoint: number = null;
 let disasmstart: number = null;
 
-function cpudiag() {
-    document.getElementById('output').innerHTML = '';
-    emulator.reset();
+function cpudiag() {   
+    reset();
     emulator.memory.set([0x76], 0);
     emulator.memory.set([0xc3, 0x06, 0xec], 0x05);
     emulator.memory.set(cpm, 0xec06);
@@ -24,20 +36,14 @@ function cpudiag() {
 }
 
 function basic() {
-    clearTimeout(runtimer);
-    runtimer = null;
-    document.getElementById('output').innerHTML = '';
-    emulator.reset();
+    reset();
     emulator.memory.set(msbasic, 0x1000);
     emulator.pc[0] = 0x1000;
     updateui();
 }
 
 function ex1() {
-    clearTimeout(runtimer);
-    runtimer = null;
-    document.getElementById('output').innerHTML = '';
-    emulator.reset();
+    reset();
     emulator.memory.set([0x76], 0);
     emulator.memory.set([0xc3, 0x06, 0xec], 0x05);
     emulator.memory.set(cpm, 0xec06);
@@ -49,10 +55,7 @@ function ex1() {
 
 
 function tinybasic() {
-    clearTimeout(runtimer);
-    runtimer = null;
-    document.getElementById('output').innerHTML = '';
-    emulator.reset();
+    reset();
     emulator.memory.set(tinybas);
     updateui();
 }
@@ -135,7 +138,11 @@ function run(speed: number): void {
 
 
 function reset() {
+    clearTimeout(runtimer);
+    runtimer = null;
     emulator.reset();
+    output = '';
+    document.getElementById('output').innerHTML = '';
     updateui();
 }
 
@@ -156,7 +163,7 @@ function updateui(): void {
         ds = emulator.disasm(disasmstart, 20);
     }
     document.getElementById('code').innerHTML =
-        ds.map(instr => `<li ${instr[0] === emulator.pc[0] ? 'id="current"':''}><span><span class="address">${displayWord(instr[0])}</span>: ${instr[1]}</span></li>`).join('');
+        ds.map(instr => `<li ${instr[0] === emulator.pc[0] ? 'id="current"' : ''}><span><span class="address">${displayWord(instr[0])}</span>: ${instr[1]}</span></li>`).join('');
     document.getElementById('register-values').innerHTML = [0, 1, 2, 3, 4, 5, 6, 7].map(r => '<td>' + ('00' + emulator.getReg(r).toString(16)).slice(-2) + '</td>').join('');
     const stack = Array.from(emulator.memory.slice(emulator.sp[0], Math.min(emulator.sp[0] + 40, 0xffff)));
     const stackwords = [];
@@ -199,6 +206,17 @@ function displayByte(n: number): string {
 function displayWord(n: number): string {
     return ('0000' + n.toString(16)).slice(-4);
 }
+
+
+function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/'/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 
 
 function keydown(ev: KeyboardEvent) {

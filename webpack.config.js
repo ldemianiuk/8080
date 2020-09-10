@@ -31,6 +31,7 @@ module.exports = {
             path.resolve(__dirname, 'src'),
             path.resolve(__dirname, 'styles'),
             path.resolve(__dirname, 'assets'),
+            'node_modules'
         ],
         extensions: ['.ts', '.js', '.scss']
     },

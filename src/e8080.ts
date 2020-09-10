@@ -1,4 +1,5 @@
-import { instructionTable, instructionSize, instructionCycles, instructionsDisasm, parityCache } from 'instructions';
+import { instructionTable, instructionSize, instructionCycles, instructionsDisasm, parityCache } from './instructions';
+import { Subject } from 'rxjs';
 
 class Flags {
     S: boolean;
@@ -43,7 +44,7 @@ export class e8080 {
     cycles: number;
     instructions: number;
     input: number[];
-    output: string;
+    output$: Subject<number>[];
     trace: string[];
 
     instructionHandlers: Handlers = {
@@ -186,7 +187,7 @@ export class e8080 {
                     this.setReg(A, this.input.shift());
                     break;
                 default:
-                    console.log('IN ' + d8);
+                    console.log(`IN ${d8}`);
             }
         },
         'INR': op => {
@@ -268,21 +269,11 @@ export class e8080 {
             this.status.A = false; // undocumented
         },
         'OUT': (op, d8) => {
-            if (d8 === 1) {
-                const ch = this.getReg(A);
-                if (ch === 13) return;
-                if (ch === 8) {
-                    this.output = this.output.substr(0, this.output.length - 1);
-                }
-                else {
-                    this.output += String.fromCharCode(ch);
-                }
-                let outpt = document.getElementById('output');
-                outpt.innerHTML = escapeHtml(this.output) + '<span class="blinking-cursor"> </span>';
-                outpt.scrollTop = outpt.scrollHeight;
+            if (this.output$[d8].observers.length > 0) {
+                this.output$[d8].next(this.getReg(A));
             }
             else {
-                console.log('OUT ' + d8);
+                console.log(`OUT ${d8}, ${this.getReg(A)}`)
             }
         },
         'PCHL': _op => {
@@ -513,6 +504,10 @@ export class e8080 {
         this.registers = new Uint8Array(8);
         this.sp = new Uint16Array(1);
         this.pc = new Uint16Array(1);
+        this.output$ = new Array(256);
+        for (let i = 0; i < 256; i++) {
+            this.output$[i] = new Subject<number>();
+        }
         this.reset();
     }
 
@@ -526,7 +521,6 @@ export class e8080 {
         this.cycles = 0;
         this.instructions = 0;
         this.input = [];
-        this.output = '';
         this.trace = new Array(0x10000);
     }
 
@@ -595,16 +589,6 @@ export class e8080 {
         console.log('S:' + this.status.S + ' Z:' + this.status.Z + ' A:' + this.status.A + ' P:' + this.status.P + ' C:' + this.status.C);
     }
 
-}
-
-
-function escapeHtml(str: string): string {
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/'/g, '&quot;')
-        .replace(/'/g, '&#039;');
 }
 
 function displayWord(n: number): string {
