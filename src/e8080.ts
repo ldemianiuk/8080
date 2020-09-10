@@ -555,14 +555,21 @@ export class e8080 {
     }
 
     disasm(_addr: number): string;
-    disasm(_addr: number, _num: number): string[];
+    disasm(_addr: number, _num: number): [number, string][];
     disasm(addr: any, num?: any): any {
         const opcode: number = this.memory[addr];
         let instr: string = instructionsDisasm[opcode];
         const len: number = instructionSize[opcode];
 
         if (num > 0) {
-            return ['<li ' + (addr === this.pc[0] ? 'class="current"' : '') + '><span><span class="address">' + ('0000' + addr.toString(16)).slice(-4) + ':</span> ' + this.disasm(addr) + '</span></li>', ...this.disasm(addr + len, num - 1)];
+            let result = [];
+            for (let a = addr, i = 0; i < num; i++) {
+                const opcode: number = this.memory[a];
+                const len: number = instructionSize[opcode];
+                result.push([a, this.disasm(a)]);
+                a += len;
+            }
+            return result;
         }
 
         if (num === 0) return [];

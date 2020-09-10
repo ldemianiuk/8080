@@ -10,6 +10,7 @@ import 'index.scss';
 let emulator = new e8080();
 let runtimer: number;
 let breakpoint: number = null;
+let disasmstart: number = null;
 
 function cpudiag() {
     document.getElementById('output').innerHTML = '';
@@ -87,7 +88,7 @@ const programs = [
 //const data = [...'memcpy'].map(s => s.charCodeAt(0));
 
 
-emulator.memory.set(programs[0], 0);
+//emulator.memory.set(programs[0], 0);
 
 //emulator.memory.set(data, 0x100);
 
@@ -148,7 +149,14 @@ function clearbreakpoint(): void {
 }
 
 function updateui(): void {
-    document.getElementById('code').innerHTML = emulator.disasm(emulator.pc[0], 20).map(instr => '' + instr + '').join('');
+    if (disasmstart === null || emulator.pc[0] < disasmstart) disasmstart = emulator.pc[0];
+    let ds = emulator.disasm(disasmstart, 20);
+    if (emulator.pc[0] > ds[15][0]) {
+        disasmstart = emulator.pc[0];
+        ds = emulator.disasm(disasmstart, 20);
+    }
+    document.getElementById('code').innerHTML =
+        ds.map(instr => `<li ${instr[0] === emulator.pc[0] ? 'id="current"':''}><span><span class="address">${displayWord(instr[0])}</span>: ${instr[1]}</span></li>`).join('');
     document.getElementById('register-values').innerHTML = [0, 1, 2, 3, 4, 5, 6, 7].map(r => '<td>' + ('00' + emulator.getReg(r).toString(16)).slice(-2) + '</td>').join('');
     const stack = Array.from(emulator.memory.slice(emulator.sp[0], Math.min(emulator.sp[0] + 40, 0xffff)));
     const stackwords = [];
