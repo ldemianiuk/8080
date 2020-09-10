@@ -56,6 +56,7 @@ function ex1() {
 
 function tinybasic() {
     reset();
+    
     emulator.memory.set(tinybas);
     updateui();
 }

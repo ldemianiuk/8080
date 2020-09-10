@@ -3,13 +3,9 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 
 module.exports = {
-    mode: 'development',
+    mode: 'production',
     entry: './src/main.ts',
-    devtool: 'inline-source-map',
     module: {
-        optimization: {
-            minimize: false
-        },
         rules: [
             {
                 test: /\.ts$/,
@@ -17,23 +13,9 @@ module.exports = {
                 exclude: /node_modules/
             },
             {
-                test: /\.js$/,
-                enforce: 'pre',
-                use: ['source-map-loader'],
-            },
-            {
                 test: /\.s[ac]ss$/i,
                 use: [
-                    ExtractTextPlugin,
-                    'css-loader',
-                    {
-                        loader: 'sass-loader',
-                        options: {
-                            sourceMap: true,
-                            minimize: false,
-                            outputStyle: 'expanded'
-                        }
-                    }
+                    MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'
                 ],
             },
             {
