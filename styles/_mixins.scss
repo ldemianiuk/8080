@@ -1,0 +1,21 @@
+@mixin animation($arguments...) {
+  -webkit-animation: $arguments;
+  -moz-animation: $arguments;
+  -o-animation: $arguments;
+  animation: $arguments;
+}
+
+@mixin keyframes($animationName) {
+  @-webkit-keyframes #{$animationName} {
+    @content;
+  }
+  @-moz-keyframes #{$animationName} {
+    @content;
+  }
+  @-o-keyframes #{$animationName} {
+    @content;
+  }
+  @keyframes #{$animationName} {
+    @content;
+  }
+}

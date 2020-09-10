@@ -4,6 +4,7 @@ import { msbasic } from 'msbasic';
 //import { precom } from 'pre';
 import { tinybas } from 'tinybas';
 import { e8080 } from 'e8080';
+import 'index.scss';
 
 
 let emulator = new e8080();
@@ -18,7 +19,7 @@ function cpudiag() {
     emulator.memory.set(cpm, 0xec06);
     emulator.memory.set(cpu_diag, 0x100);
     emulator.pc[0] = 0x100;
-    refreshui();
+    updateui();
 }
 
 function basic() {
@@ -28,7 +29,7 @@ function basic() {
     emulator.reset();
     emulator.memory.set(msbasic, 0x1000);
     emulator.pc[0] = 0x1000;
-    refreshui();
+    updateui();
 }
 
 function ex1() {
@@ -41,7 +42,7 @@ function ex1() {
     emulator.memory.set(cpm, 0xec06);
     emulator.memory.set(ex1com, 0x100);
     emulator.pc[0] = 0x100;
-    refreshui();
+    updateui();
 }
 
 
@@ -52,7 +53,7 @@ function tinybasic() {
     document.getElementById('output').innerHTML = '';
     emulator.reset();
     emulator.memory.set(tinybas);
-    refreshui();
+    updateui();
 }
 
 
@@ -95,14 +96,14 @@ function selectProgram() {
     emulator.reset();
     emulator.memory.set(programs[Number((<HTMLInputElement>document.getElementById('program')).value)], 0);
     document.getElementById('output').innerHTML = '';
-    refreshui();
+    updateui();
 }
 
 function step(): void {
     clearTimeout(runtimer);
     runtimer = null;
     emulator.step();
-    refreshui();
+    updateui();
 }
 
 function run(speed: number): void {
@@ -115,11 +116,11 @@ function run(speed: number): void {
             emulator.step();
             if (emulator.pc[0] === breakpoint) {
                 runtimer = null;
-                refreshui();
+                updateui();
                 return;
             }
         }
-        refreshui();
+        updateui();
         if (emulator.running) {
             runtimer = setTimeout(fn, 0);
         }
@@ -134,7 +135,7 @@ function run(speed: number): void {
 
 function reset() {
     emulator.reset();
-    refreshui();
+    updateui();
 }
 
 function setbreakpoint(): boolean {
@@ -146,7 +147,7 @@ function clearbreakpoint(): void {
     breakpoint = null;
 }
 
-function refreshui(): void {
+function updateui(): void {
     document.getElementById('code').innerHTML = emulator.disasm(emulator.pc[0], 20).map(instr => '' + instr + '').join('');
     document.getElementById('register-values').innerHTML = [0, 1, 2, 3, 4, 5, 6, 7].map(r => '<td>' + ('00' + emulator.getReg(r).toString(16)).slice(-2) + '</td>').join('');
     const stack = Array.from(emulator.memory.slice(emulator.sp[0], Math.min(emulator.sp[0] + 40, 0xffff)));
@@ -222,7 +223,7 @@ window.onload = function () {
     //tinybasic();
     //emulator.memory.set(programs[1], 0);
     //ex1();
-    refreshui();
+    updateui();
     document.getElementById('run').onclick = () => run(100);
     document.getElementById('animate').onclick = () => run(1);
     document.getElementById('step').onclick = step;
@@ -231,5 +232,6 @@ window.onload = function () {
     document.getElementById('clearbreakpoint').onclick = clearbreakpoint;
     document.getElementById('output').onkeypress = keypress;
     document.getElementById('output').onkeydown = keydown;
+    document.getElementById('page').onchange = updateui;
 }
 

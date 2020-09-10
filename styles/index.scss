@@ -1,11 +1,18 @@
+@use 'mixins';
+
+$background: #27292c;
+$foreground: white;
+$pane: #1e1f22;
+$border: #43464b;
+
 body {
     font-family: 'Courier New', Courier, monospace;
-    background-color: #27292c;
-    color: white;
+    background-color: $background;
+    color: $foreground;
 }
 
 * {
-    border-color: #43464b;
+    border-color: $border;
 }
 
 .content {
@@ -13,10 +20,12 @@ body {
     flex-direction: row;
 }
 
+.content div {
+  margin-right: 10px;
+}
+
 ul#code {
-    font-family: 'Courier New', Courier, monospace;
     list-style: none;
-    border-style: solid;
     padding: 0;
     width: 14em;
     font-weight: bold;
@@ -43,8 +52,6 @@ ul#code li span {
 
 table#registers {
     margin-left: 10px;
-    border-style: solid;
-    font-family: 'Courier New', Courier, monospace;
     border-collapse: collapse;
 }
 
@@ -56,16 +63,13 @@ table#registers th,td {
 
 
 ul#stack {
-    font-family: 'Courier New', Courier, monospace;
     list-style: none;
-    border-style: solid;
     width: 10em;
     margin-left: 10px;
 }
 
 div#memory {
     letter-spacing: 0;
-    border-style: solid;
     margin-left: 10px;
     padding: 10px;
     letter-spacing: 0.2em;
@@ -77,17 +81,17 @@ div#memory {
     src: url('VT323-Regular.ttf') format('truetype');
 }
 
-@font-face {
+/* @font-face {
     font-family: 'DEC Terminal';
     src: url('DECTERM.ttf') format('truetype');
 }
-
+ */
+ 
 #output {
     /* font-family: 'DEC Terminal'; */
     font-family: 'VT323';
     font-size: 150%;
     width: 80ch;
-    border-style: solid;
     min-height: 1em;
     line-height: 1em;
     height: 20em;
@@ -120,65 +124,23 @@ div#memory {
 }
 
 div#flags {
-    border-style: solid;
     padding: 10px;
 }
 
 div#cycles {
-    border-style: solid;
     padding: 10px;
 }
 
 div#instructions {
-    border-style: solid;
 }
+
 
 .blinking-cursor {
   color: #2E3D48;
-  -webkit-animation: 1s blink step-end infinite;
-  -moz-animation: 1s blink step-end infinite;
-  -ms-animation: 1s blink step-end infinite;
-  -o-animation: 1s blink step-end infinite;
-  animation: 1s blink step-end infinite;
+    @include mixins.animation(1s blink step-end infinite);
 }
 
-@keyframes blink {
-  from, to {
-    background-color: transparent;
-  }
-  50% {
-    background-color: #33ff33;
-  }
-}
-
-@-moz-keyframes blink {
-  from, to {
-    background-color: transparent;
-  }
-  50% {
-    background-color: #33ff33;
-  }
-}
-
-@-webkit-keyframes blink {
-  from, to {
-    background-color: transparent;
-  }
-  50% {
-    background-color: #33ff33;
-  }
-}
-
-@-ms-keyframes blink {
-  from, to {
-    background-color: transparent;
-  }
-  50% {
-    background-color: #33ff33;
-  }
-}
-
-@-o-keyframes blink {
+@include mixins.keyframes(blink) {
   from, to {
     background-color: transparent;
   }
@@ -238,10 +200,20 @@ h1:before {
 }
 
 .uibox {
-    background-color: #1e1f22;
+    background-color: $pane;
+    border-style: solid;
 }
 
 input {
-  background-color: #27292c;
-  color: white;
+  background-color: $background;
+  color: $foreground;
+}
+
+#page {
+  width: 4em;
+  margin-bottom: 10px;
+}
+
+#bpform {
+  display: inline;
 }
