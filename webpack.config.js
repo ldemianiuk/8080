@@ -7,9 +7,6 @@ module.exports = {
     entry: './src/main.ts',
     devtool: 'inline-source-map',
     module: {
-        optimization: {
-            minimize: false
-        },
         rules: [
             {
                 test: /\.ts$/,
@@ -24,14 +21,16 @@ module.exports = {
             {
                 test: /\.s[ac]ss$/i,
                 use: [
-                    ExtractTextPlugin,
+                    MiniCssExtractPlugin.loader,
                     'css-loader',
                     {
                         loader: 'sass-loader',
                         options: {
                             sourceMap: true,
-                            minimize: false,
-                            outputStyle: 'expanded'
+                            sassOptions: {
+                                minimize: false,
+                                outputStyle: 'expanded'
+                            }
                         }
                     }
                 ],

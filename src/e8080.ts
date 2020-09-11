@@ -1,4 +1,4 @@
-import { instructionTable, instructionSize, instructionCycles, instructionsDisasm, parityCache } from './instructions';
+import { instructionTable, instructionSize, instructionCycles, instructionsDisasm, parityCache, instructionDescription } from './instructions';
 import { Subject } from 'rxjs';
 
 class Flags {
@@ -549,7 +549,7 @@ export class e8080 {
     }
 
     disasm(_addr: number): string;
-    disasm(_addr: number, _num: number): [number, string][];
+    disasm(_addr: number, _num: number): [number, string, string][];
     disasm(addr: any, num?: any): any {
         const opcode: number = this.memory[addr];
         let instr: string = instructionsDisasm[opcode];
@@ -560,7 +560,7 @@ export class e8080 {
             for (let a = addr, i = 0; i < num; i++) {
                 const opcode: number = this.memory[a];
                 const len: number = instructionSize[opcode];
-                result.push([a, this.disasm(a)]);
+                result.push([a, this.disasm(a), instructionDescription[opcode]]);
                 a += len;
             }
             return result;

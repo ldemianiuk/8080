@@ -1,4 +1,4 @@
-import { cpu_diag, cpm } from './cpudiag';
+import { cpu_diag, bdos } from './cpudiag';
 import { ex1com } from './ex1';
 import { msbasic } from './msbasic';
 //import { precom } from './pre';
@@ -27,9 +27,8 @@ let disasmstart: number = null;
 
 function cpudiag() {   
     reset();
-    emulator.memory.set([0x76], 0);
-    emulator.memory.set([0xc3, 0x06, 0xec], 0x05);
-    emulator.memory.set(cpm, 0xec06);
+    emulator.memory.set([0x76, 0, 0, 0, 0, 0xc3, 0x06, 0xec], 0);
+    emulator.memory.set(bdos, 0xec06);
     emulator.memory.set(cpu_diag, 0x100);
     emulator.pc[0] = 0x100;
     updateui();
@@ -44,9 +43,8 @@ function basic() {
 
 function ex1() {
     reset();
-    emulator.memory.set([0x76], 0);
-    emulator.memory.set([0xc3, 0x06, 0xec], 0x05);
-    emulator.memory.set(cpm, 0xec06);
+    emulator.memory.set([0x76, 0, 0, 0, 0, 0xc3, 0x06, 0xec], 0);
+    emulator.memory.set(bdos, 0xec06);
     emulator.memory.set(ex1com, 0x100);
     emulator.pc[0] = 0x100;
     updateui();
@@ -56,7 +54,7 @@ function ex1() {
 
 function tinybasic() {
     reset();
-    
+
     emulator.memory.set(tinybas);
     updateui();
 }
@@ -164,7 +162,7 @@ function updateui(): void {
         ds = emulator.disasm(disasmstart, 20);
     }
     document.getElementById('code').innerHTML =
-        ds.map(instr => `<li ${instr[0] === emulator.pc[0] ? 'id="current"' : ''}><span><span class="address">${displayWord(instr[0])}</span>: ${instr[1]}</span></li>`).join('');
+        ds.map(instr => `<li ${instr[0] === emulator.pc[0] ? 'id="current"' : ''}><span class="tooltip"><span class="address">${displayWord(instr[0])}</span>: ${instr[1]}<span class="tooltiptext">${instr[2]}</span></span></li>`).join('');
     document.getElementById('register-values').innerHTML = [0, 1, 2, 3, 4, 5, 6, 7].map(r => '<td>' + ('00' + emulator.getReg(r).toString(16)).slice(-2) + '</td>').join('');
     const stack = Array.from(emulator.memory.slice(emulator.sp[0], Math.min(emulator.sp[0] + 40, 0xffff)));
     const stackwords = [];
@@ -245,8 +243,8 @@ function keypress(ev: KeyboardEvent) {
 
 
 window.onload = function () {
-    //cpudiag();
-    basic();
+    cpudiag();
+    //basic();
     //tinybasic();
     //emulator.memory.set(programs[1], 0);
     //ex1();
