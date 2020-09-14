@@ -12,11 +12,6 @@
     <button id='animate'>Animate</button>
     <button id='run'>Run</button>
     <button id='reset'>Reset</button>
-    <form id='bpform' action="">
-    Breakpoint: <input id="breakpoint" type="text">
-    <input id='setbreakpoint' type="submit" value="Set"">
-    <input id='clearbreakpoint' type="reset" value="Clear">
-    </form>
     <!-- <button onclick="selectProgram()">RESET</button> -->
     <!--     Program:
     <select name="program" id="program" onchange="selectProgram()">
@@ -30,9 +25,32 @@
             </ul>
         </div>
         <div>
-            <h2>Terminal</h2>
-            <pre id="output" tabindex="0">
-            </pre>
+            <div class="content">
+                <div>
+                    <h2>Terminal</h2>
+                    <pre id="output" tabindex="0"></pre>
+                </div>
+                <div>
+                    <h2>Breakpoints</h2>
+                    <form id='bpform' action="">
+                         <input id="breakpoint" type="text">
+                        <input id='setbreakpoint' type="submit" value="Add">
+                        <input id='removebreakpoint' type="submit" value="Del">
+                        <input id='clearbreakpoint' type="reset" value="Clear">
+                    </form>
+                    <br>
+                    <select id='breakpoints' size="5" style="width: 20ch; overflow: auto">
+                    </select>
+
+                    <h2>Load Intel Hex</h2>
+                    <button id="load">Load</button>
+                    <br><br>
+                    <textarea id="loadcode" spellcheck="false">:20010000C347011B417373656D626C6564206279205072657474792038303830204173734F
+:20012000656D626C65720D0A687474703A2F2F73656E73692E6F72672F7E73766F2F69386C
+:100140003038302F0D0A241104010E09CD05007638
+:00000001FF</textarea>
+                </div>
+            </div>
             <div class="content">
                 <div>
                     <h2>Registers</h2>

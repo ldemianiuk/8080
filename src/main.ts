@@ -1,8 +1,10 @@
 import { cpu_diag, bdos } from './cpudiag';
+import * as MemoryMap from 'nrf-intel-hex';
 import { ex1com } from './ex1';
 import { msbasic } from './msbasic';
 //import { precom } from './pre';
 import { tinybas } from './tinybas';
+import { ctest } from './ctest';
 import { e8080 } from './e8080';
 import 'index.scss';
 
@@ -22,7 +24,7 @@ emulator.output$[1].subscribe(ch => {
     outpt.scrollTop = outpt.scrollHeight;
 });
 let runtimer: number;
-let breakpoint: number = null;
+let breakpoints: number[] = [];
 let disasmstart: number = null;
 
 function cpudiag() {   
@@ -41,6 +43,15 @@ function basic() {
     updateui();
 }
 
+
+function c_test() {
+    reset();
+    emulator.memory[0x08] = 0x76;
+    emulator.memory.set(ctest, 0x100);
+    emulator.pc[0] = 0x100;
+    updateui();
+}
+
 function ex1() {
     reset();
     emulator.memory.set([0x76, 0, 0, 0, 0, 0xc3, 0x06, 0xec], 0);
@@ -54,7 +65,6 @@ function ex1() {
 
 function tinybasic() {
     reset();
-
     emulator.memory.set(tinybas);
     updateui();
 }
@@ -117,7 +127,7 @@ function run(speed: number): void {
     function fn() {
         for (let i = 0; i < speed; i++) {
             emulator.step();
-            if (emulator.pc[0] === breakpoint) {
+            if (breakpoints.includes(emulator.pc[0])) {
                 runtimer = null;
                 updateui();
                 return;
@@ -146,12 +156,37 @@ function reset() {
 }
 
 function setbreakpoint(): boolean {
-    breakpoint = parseInt((<HTMLInputElement>document.getElementById('breakpoint')).value, 16);
+    const bpInput = <HTMLInputElement>document.getElementById('breakpoint');
+    const addr: number = parseInt(bpInput.value, 16);
+    if (isNaN(addr)) return false;
+    if (breakpoints.includes(addr)) return false;
+    breakpoints.push(addr);
+    const bp = <HTMLSelectElement> document.getElementById('breakpoints');
+    let option = document.createElement('option');
+    option.text = displayWord(addr) + ': ' + emulator.disasm(addr);
+    option.value = addr.toString(16);
+    bp.add(option);
+    bpInput.value = '';
+    return false;
+}
+
+function removebreakpoint(): boolean {
+    const bp = <HTMLSelectElement> document.getElementById('breakpoints');
+    const i = bp.selectedIndex;
+    if (i < 0) return false;
+    const addr: number = parseInt(bp.options.item(i).value, 16);
+    breakpoints = breakpoints.filter(a => a !== addr);
+    bp.options.remove(i);
     return false;
 }
 
 function clearbreakpoint(): void {
-    breakpoint = null;
+    breakpoints = [];
+    const bp = <HTMLSelectElement> document.getElementById('breakpoints');
+    const len = bp.options.length;
+    for (let i = len - 1; i >= 0; i--) {
+        bp.options.remove(i);
+    }
 }
 
 function updateui(): void {
@@ -241,20 +276,42 @@ function keypress(ev: KeyboardEvent) {
     ev.stopPropagation();
 }
 
+function loadCode(): void {
+    const hex = (<HTMLInputElement>document.getElementById('loadcode')).value.replace(/^\s+|\s+$/g, '');
+    let memMap = <Map<any, any>> MemoryMap.fromHex(hex);
+
+    reset();
+    emulator.memory.set([0x76, 0, 0, 0, 0, 0xc3, 0x06, 0xec, 0x76], 0);
+    emulator.memory.set(bdos, 0xec06);
+
+    for (var [key, value] of memMap) {
+        emulator.memory.set(value, key);
+    }
+
+    emulator.pc[0] = 0x100;
+
+    updateui();
+}
+
 
 window.onload = function () {
+    //emulator.memory.set([0xc3, 0xff, 0xff]);
+    //emulator.memory.set([0xc3], 0xffff);
     cpudiag();
+    //c_test();
     //basic();
     //tinybasic();
     //emulator.memory.set(programs[1], 0);
     //ex1();
     updateui();
-    document.getElementById('run').onclick = () => run(100);
+    document.getElementById('run').onclick = () => run(10000);
     document.getElementById('animate').onclick = () => run(1);
     document.getElementById('step').onclick = step;
     document.getElementById('reset').onclick = cpudiag;
     document.getElementById('setbreakpoint').onclick = setbreakpoint;
     document.getElementById('clearbreakpoint').onclick = clearbreakpoint;
+    document.getElementById('removebreakpoint').onclick = removebreakpoint;
+    document.getElementById('load').onclick = loadCode;
     document.getElementById('output').onkeypress = keypress;
     document.getElementById('output').onkeydown = keydown;
     document.getElementById('page').onchange = updateui;

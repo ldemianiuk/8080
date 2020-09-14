@@ -99,7 +99,9 @@ div#memory {
     color: #d6cef4; */
     background: #151617;
     color: #33ff33;
-
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
 }
 
 
@@ -203,9 +205,15 @@ h1:before {
     border-style: solid;
 }
 
-input {
+input, textarea, select {
   background-color: $background;
   color: $foreground;
+}
+
+textarea#loadcode {
+  width: 50ch;
+  height: 20em;
+  white-space: nowrap;
 }
 
 #page {
