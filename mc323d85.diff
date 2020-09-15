@@ -1,0 +1,72 @@
+diff -ruN --strip-trailing-cr mc323d85/BUILD.BAT mc/BUILD.BAT
+--- mc323d85/BUILD.BAT	1970-01-01 00:00:00 +0000
++++ mc/BUILD.BAT	2020-09-15 11:40:27 +0000
+@@ -0,0 +1,12 @@
++@echo OFF
++
++rem ** Build simple -Assembly file
++rem ** Also, -Fold constants, -Optimize, and use the -Preprocessor
++cc85 %1 -afop
++
++rem ** Link output with the 8085 library and produce a
++rem ** single OUT.ASM file with startup, user code and library functions
++slink %1.asm out.asm l=C:\MC\LIB85
++
++rem ** Assemble final output file and produce .HEX and -Full Listing
++asm85 out -if
+diff -ruN --strip-trailing-cr mc323d85/LIB85/8085RLP.ASM mc/LIB85/8085RLP.ASM
+--- mc323d85/LIB85/8085RLP.ASM	2020-09-13 16:21:58 +0000
++++ mc/LIB85/8085RLP.ASM	2020-09-13 22:02:05 +0000
+@@ -5,7 +5,7 @@
+ * Copyright 1991-2005 Dave Dunfield
+ * All rights reserved.
+ *
+-	ORG	$4000		Place code in memory here
++	ORG	$100		Place code in memory here
+ 	LXI	SP,$6000	Initial stack goes here
+ 	XRA	A		Get a ZERO
+ 	STA	?heap		Initialize the heap
+@@ -46,6 +46,7 @@
+ 	MOV	A,M		Get value
+ 	INX	H		Skip
+ 	PUSH	H		Restore stack
++	MOV	L,A
+ 	MVI	H,0		Zero high
+ * Get word from stack variable: HL = [SP+HL]
+ ?gstkw	DAD	SP		Offset to stack
+diff -ruN --strip-trailing-cr mc323d85/LIB85/SERIO.ASM mc/LIB85/SERIO.ASM
+--- mc323d85/LIB85/SERIO.ASM	2020-09-13 16:21:58 +0000
++++ mc/LIB85/SERIO.ASM	2020-09-15 11:42:08 +0000
+@@ -13,10 +13,10 @@
+ *
+ * Read a character from the 8251 serial port: getch()
+ *
+-getch	IN	$81		Read status
+-	ANI	%00000010	Received character?
++getch	IN	$0		Read status
++	ANI	$FF		Received character?
+ 	JZ	getch		No, wait for it
+-?1	IN	$80		Read the data
++?1	IN	$1		Read the data
+ 	MOV	L,A		Return in HL
+ 	MVI	H,0		Zero high
+ 	CPI	$0D		Carriage return?
+@@ -28,15 +28,9 @@
+ *
+ putch	LXI	H,4		Offset to first parm
+ 	CALL	?gstkb		Get the value
+-?2	IN	$81		Read 8251 status
+-	RRC			CY = TX ready?
+-	JNC	?2		No, wait for it
+-	MOV	A,L		Get char
+-	OUT	$80		Write to port
+-	CPI	$0A		Newline?
+-	RNZ			No, its ok
+-	MVI	L,$0D		Append a CR
+-	JMP	?2		And proceed
++?2	MOV	A,L		Get char
++	OUT	$1		Write to port
++	RET
+ *
+ * Write a string to the serial port: putstr(char * s)
+ *
