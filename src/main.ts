@@ -1,5 +1,5 @@
 import { cpu_diag, bdos } from './cpudiag';
-import * as MemoryMap from 'nrf-intel-hex';
+import MemoryMap from './intel-hex';
 import { ex1com } from './ex1';
 import { msbasic } from './msbasic';
 //import { precom } from './pre';
@@ -278,7 +278,9 @@ function keypress(ev: KeyboardEvent) {
 
 function loadCode(): void {
     const hex = (<HTMLInputElement>document.getElementById('loadcode')).value.replace(/^\s+|\s+$/g, '');
-    let memMap = <Map<any, any>> MemoryMap.fromHex(hex);
+    let memMap = MemoryMap.fromHex(hex);
+
+    console.log(memMap);
 
     reset();
     emulator.memory.set([0x76, 0, 0, 0, 0, 0xc3, 0x06, 0xec, 0x76], 0);
@@ -291,6 +293,15 @@ function loadCode(): void {
     emulator.pc[0] = 0x100;
 
     updateui();
+}
+
+function uploadHex(event: any) {
+    const reader = new FileReader();
+    reader.onload = (txt) => {
+        let hex = <HTMLInputElement>document.getElementById('loadcode');
+        hex.value = <string> txt.target.result;
+    };
+    reader.readAsText(event.target.files[0]);
 }
 
 
@@ -315,5 +326,6 @@ window.onload = function () {
     document.getElementById('output').onkeypress = keypress;
     document.getElementById('output').onkeydown = keydown;
     document.getElementById('page').onchange = updateui;
+    document.getElementById('loadfile').onchange = uploadHex;
 }
 
