@@ -1,12 +1,9 @@
-import { cpu_diag, bdos } from './cpudiag';
 import MemoryMap from './intel-hex';
-import { ex1com } from './ex1';
-import { msbasic } from './msbasic';
-//import { precom } from './pre';
-import { tinybas } from './tinybas';
-import { ctest } from './ctest';
 import { e8080 } from './e8080';
+import { bdos } from './bdos';
 import 'index.scss';
+
+
 
 
 let emulator = new e8080();
@@ -27,90 +24,6 @@ let runtimer: number;
 let breakpoints: number[] = [];
 let disasmstart: number = null;
 
-function cpudiag() {   
-    reset();
-    emulator.memory.set([0x76, 0, 0, 0, 0, 0xc3, 0x06, 0xec], 0);
-    emulator.memory.set(bdos, 0xec06);
-    emulator.memory.set(cpu_diag, 0x100);
-    emulator.pc[0] = 0x100;
-    updateui();
-}
-
-function basic() {
-    reset();
-    emulator.memory.set(msbasic, 0x1000);
-    emulator.pc[0] = 0x1000;
-    updateui();
-}
-
-
-function c_test() {
-    reset();
-    emulator.memory[0x08] = 0x76;
-    emulator.memory.set(ctest, 0x100);
-    emulator.pc[0] = 0x100;
-    updateui();
-}
-
-function ex1() {
-    reset();
-    emulator.memory.set([0x76, 0, 0, 0, 0, 0xc3, 0x06, 0xec], 0);
-    emulator.memory.set(bdos, 0xec06);
-    emulator.memory.set(ex1com, 0x100);
-    emulator.pc[0] = 0x100;
-    updateui();
-}
-
-
-
-function tinybasic() {
-    reset();
-    emulator.memory.set(tinybas);
-    updateui();
-}
-
-
-const programs = [
-    [0x21, 0x10, 0x00, 0x7E, 0xB7, 0xCA, 0x0E, 0x00, 0xD3, 0x01, 0x23, 0xC3, 0x03, 0x00, 0x76, 0x00, 0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x57, 0x6F, 0x72, 0x6C, 0x64, 0x21, 0x00, 0x35],
-    [
-        0x06, 0x00, /* MVI B, 0 */
-        0x0E, 0x06, /* MVI C, 6 */
-        0x16, 0x00, /* MVI D, 1 */
-        0x1E, 0x20, /* MVI E, 0 */
-        0x26, 0x00, /* MVI H, 1 */
-        0x2E, 0x30, /* MVI L, 10 */
-        0xCD, 0x10, 0x00, /* call memcpy */
-        0x76,   /* hlt */
-        0x78,	/* memcpy: mov     a,b         ;Copy register B to register A */
-        0xB1,	/* ora     c           ;Bitwise OR of A and C into register A */
-        0xC8,	/* rz                  ;Return if the zero-flag is set high. */
-        0x1A,	/* loop:       ldax    d           ;Load A from the address pointed by DE */
-        0x77,	/* mov     m,a         ;Store A into the address pointed by HL */
-        0x13,	/* inx     d           ;Increment DE */
-        0x23,	/* inx     h           ;Increment HL */
-        0x0B,	/* dcx     b           ;Decrement BC   (does not affect Flags) */
-        0x78,	/* mov     a,b         ;Copy B to A    (so as to compare BC with zero) */
-        0xB1,	/* ora     c           ;A = A | C      (set zero) */
-        0xC2, 0x13, 0x00,	/* jnz     loop        ;Jump to 'loop:' if the zero-flag is not set. */
-        0xC9,	/* ret */
-        0x00, 0x00,
-        0x6d, 0x65, 0x6d, 0x63, 0x70, 0x79 /* 'memcpy' */
-    ]];
-
-//const data = [...'memcpy'].map(s => s.charCodeAt(0));
-
-
-//emulator.memory.set(programs[0], 0);
-
-//emulator.memory.set(data, 0x100);
-
-
-function selectProgram() {
-    emulator.reset();
-    emulator.memory.set(programs[Number((<HTMLInputElement>document.getElementById('program')).value)], 0);
-    document.getElementById('output').innerHTML = '';
-    updateui();
-}
 
 function step(): void {
     clearTimeout(runtimer);
@@ -135,7 +48,7 @@ function run(speed: number): void {
         }
         updateui();
         if (emulator.running) {
-            runtimer = setTimeout(fn, 0);
+            runtimer = window.setTimeout(fn, 0);
         }
         else {
             //document.querySelectorAll('button').forEach(b => b.disabled = false);
@@ -280,8 +193,6 @@ function loadCode(): void {
     const hex = (<HTMLInputElement>document.getElementById('loadcode')).value.replace(/^\s+|\s+$/g, '');
     let memMap = MemoryMap.fromHex(hex);
 
-    console.log(memMap);
-
     reset();
     emulator.memory.set([0x76, 0, 0, 0, 0, 0xc3, 0x06, 0xec, 0x76], 0);
     emulator.memory.set(bdos, 0xec06);
@@ -290,7 +201,12 @@ function loadCode(): void {
         emulator.memory.set(value, key);
     }
 
-    emulator.pc[0] = 0x100;
+    if (memMap.ip !== null) {
+        emulator.pc[0] = memMap.ip;
+    }
+    else {
+        emulator.pc[0] = 0x100;
+    }
 
     updateui();
 }
@@ -304,21 +220,47 @@ function uploadHex(event: any) {
     reader.readAsText(event.target.files[0]);
 }
 
+function getProgramIndex() {
+    fetch('programs/index').then(response => response.text()).then(text => {
+        const programs = text.split('\n').map(line => line.split(':'));
+        const pr = <HTMLSelectElement> document.getElementById('programs');
+        programs.map(program => {
+            let option = document.createElement('option');
+            option.value = program[0];
+            option.text = program[1];
+            pr.options.add(option);
+        })
+        pr.options.selectedIndex = -1;
+    }).catch(e => console.log(e));
+}
+
+function loadProgram(file: string) {
+    fetch(`programs/${file}`).then(response => response.text()).then(text => {
+        let hex = <HTMLInputElement>document.getElementById('loadcode');
+        hex.value = text;
+    }).catch(e => console.log(e));
+}
+
+function selectProgram() {
+    const pr = <HTMLSelectElement> document.getElementById('programs');
+    if (pr.selectedIndex == -1) return;
+    const program: string = pr.options.item(pr.selectedIndex).value;
+    loadProgram(program);
+}
 
 window.onload = function () {
     //emulator.memory.set([0xc3, 0xff, 0xff]);
     //emulator.memory.set([0xc3], 0xffff);
-    cpudiag();
+    //cpudiag();
     //c_test();
     //basic();
     //tinybasic();
     //emulator.memory.set(programs[1], 0);
     //ex1();
-    updateui();
     document.getElementById('run').onclick = () => run(10000);
     document.getElementById('animate').onclick = () => run(1);
     document.getElementById('step').onclick = step;
-    document.getElementById('reset').onclick = cpudiag;
+    document.getElementById('reset').onclick = reset;
     document.getElementById('setbreakpoint').onclick = setbreakpoint;
     document.getElementById('clearbreakpoint').onclick = clearbreakpoint;
     document.getElementById('removebreakpoint').onclick = removebreakpoint;
@@ -327,5 +269,9 @@ window.onload = function () {
     document.getElementById('output').onkeydown = keydown;
     document.getElementById('page').onchange = updateui;
     document.getElementById('loadfile').onchange = uploadHex;
+    document.getElementById('programs').onchange = selectProgram;
+    getProgramIndex();
+    loadCode();
+    updateui();
 }
 

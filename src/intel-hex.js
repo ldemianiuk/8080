@@ -85,6 +85,7 @@ class MemoryMap {
      */
     constructor(blocks) {
         this._blocks = new Map();
+        this.ip = null;
 
         if (blocks && typeof blocks[Symbol.iterator] === 'function') {
             for (const tuple of blocks) {
@@ -255,8 +256,7 @@ class MemoryMap {
                     break;
 
                 case 3: // Start Segment Address Record
-                    // Do nothing. Record type 3 only applies to 16-bit Intel CPUs,
-                    // where it should reset the program counter (CS+IP CPU registers)
+                    blocks.ip = data[3] + (data[2] << 8);
                     break;
 
                 case 4: // Extended Linear Address Record
@@ -336,6 +336,7 @@ class MemoryMap {
 
         // Second pass: allocate memory for the contiguous blocks and copy data around.
         const mergedBlocks = new MemoryMap();
+        mergedBlocks.ip = this.ip;
         let mergingBlock;
         let mergingBlockAddr = -1;
         for (let i=0,l=sortedKeys.length; i<l; i++) {
