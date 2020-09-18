@@ -86,7 +86,7 @@ div#memory {
 }
  */
  
-#output {
+#terminal {
     /* font-family: 'DEC Terminal'; */
     font-family: 'VT323';
     font-size: 150%;
@@ -103,6 +103,7 @@ div#memory {
     word-wrap: break-word;
     word-break: break-all;
 }
+
 
 
 /* #output::-webkit-scrollbar {

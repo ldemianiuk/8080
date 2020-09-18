@@ -179,12 +179,13 @@ export class e8080 {
         const arg1 = this.memory[(this.pc[0] + 1) & 0xffff];
         const arg2 = this.memory[(this.pc[0] + 2) & 0xffff];
 
-        this.trace[this.pc[0]] = displayWord(this.pc[0]) + ': ' + this.disasm(this.pc[0]);
+        //this.trace[this.pc[0]] = displayWord(this.pc[0]) + ': ' + this.disasm(this.pc[0]);
 
         this.pc[0] += len;
 
-        if (e8080.instructionHandlers[instr].bind(this)) {
-            e8080.instructionHandlers[instr].bind(this)(opcode, arg1, arg2);
+        const handler = e8080.instructionHandlers[instr];
+        if (handler) {
+            handler.call(this, opcode, arg1, arg2);
         }
         else {
             console.log('ERROR: ' + instr);

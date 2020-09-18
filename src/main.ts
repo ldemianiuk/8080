@@ -8,6 +8,9 @@ import 'index.scss';
 
 let emulator = new e8080();
 let output = '';
+let outpt: HTMLElement;
+let terminal: HTMLElement;
+
 emulator.output$[1].subscribe(ch => {
     if (ch === 13) return;
     if (ch === 8) {
@@ -16,10 +19,11 @@ emulator.output$[1].subscribe(ch => {
     else {
         output += String.fromCharCode(ch);
     }
-    let outpt = document.getElementById('output');
-    outpt.innerHTML = escapeHtml(output) + '<span class="blinking-cursor"> </span>';
-    outpt.scrollTop = outpt.scrollHeight;
+
+    outpt.innerText = output;
+    terminal.scrollTop = terminal.scrollHeight;
 });
+
 let runtimer: number;
 let breakpoints: number[] = [];
 let disasmstart: number = null;
@@ -32,21 +36,28 @@ function step(): void {
     updateui();
 }
 
-function run(speed: number): void {
+function run(instructions: number): void {
     if (runtimer) return;
     //document.querySelectorAll('button').forEach(b => b.disabled = true);
-    document.getElementById('output').focus();
+    document.getElementById('terminal').focus();
     const t0 = new Date().getTime();
     function fn() {
-        for (let i = 0; i < speed; i++) {
+        for (let i = 0; i < instructions; i++) {
+            const op = emulator.memory[emulator.pc[0]];
             emulator.step();
             if (breakpoints.includes(emulator.pc[0])) {
                 runtimer = null;
                 updateui();
                 return;
             }
+            if (op === 0xd3 || op === 0xdb) break;
         }
-        updateui();
+        if (instructions === 1) {
+            updateui();
+        }
+        else {
+            updatecycles();
+        }
         if (emulator.running) {
             runtimer = window.setTimeout(fn, 0);
         }
@@ -74,7 +85,7 @@ function setbreakpoint(): boolean {
     if (isNaN(addr)) return false;
     if (breakpoints.includes(addr)) return false;
     breakpoints.push(addr);
-    const bp = <HTMLSelectElement> document.getElementById('breakpoints');
+    const bp = <HTMLSelectElement>document.getElementById('breakpoints');
     let option = document.createElement('option');
     option.text = displayWord(addr) + ': ' + emulator.disasm(addr);
     option.value = addr.toString(16);
@@ -84,7 +95,7 @@ function setbreakpoint(): boolean {
 }
 
 function removebreakpoint(): boolean {
-    const bp = <HTMLSelectElement> document.getElementById('breakpoints');
+    const bp = <HTMLSelectElement>document.getElementById('breakpoints');
     const i = bp.selectedIndex;
     if (i < 0) return false;
     const addr: number = parseInt(bp.options.item(i).value, 16);
@@ -95,11 +106,15 @@ function removebreakpoint(): boolean {
 
 function clearbreakpoint(): void {
     breakpoints = [];
-    const bp = <HTMLSelectElement> document.getElementById('breakpoints');
+    const bp = <HTMLSelectElement>document.getElementById('breakpoints');
     const len = bp.options.length;
     for (let i = len - 1; i >= 0; i--) {
         bp.options.remove(i);
     }
+}
+
+function updatecycles() {
+    document.getElementById('cycles').innerHTML = emulator.cycles.toString();
 }
 
 function updateui(): void {
@@ -155,13 +170,14 @@ function displayWord(n: number): string {
 }
 
 
-function escapeHtml(str: string): string {
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/'/g, '&quot;')
-        .replace(/'/g, '&#039;');
+
+function escapeHtmlChar(str: string): string {
+    switch (str) {
+        case '&': return '&amp;';
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        default: return str;
+    }
 }
 
 
@@ -173,7 +189,7 @@ function keydown(ev: KeyboardEvent) {
         ev.stopPropagation();
     }
     else if (ev.keyCode === 27) {
-        document.getElementById('output').blur();
+        document.getElementById('terminal').blur();
     }
     else if (ev.ctrlKey && ev.keyCode !== 17) {
         emulator.input.push(ev.keyCode & 0b00111111);
@@ -215,7 +231,7 @@ function uploadHex(event: any) {
     const reader = new FileReader();
     reader.onload = (txt) => {
         let hex = <HTMLInputElement>document.getElementById('loadcode');
-        hex.value = <string> txt.target.result;
+        hex.value = <string>txt.target.result;
     };
     reader.readAsText(event.target.files[0]);
 }
@@ -223,7 +239,7 @@ function uploadHex(event: any) {
 function getProgramIndex() {
     fetch('programs/index').then(response => response.text()).then(text => {
         const programs = text.split('\n').map(line => line.split(':'));
-        const pr = <HTMLSelectElement> document.getElementById('programs');
+        const pr = <HTMLSelectElement>document.getElementById('programs');
         programs.map(program => {
             let option = document.createElement('option');
             option.value = program[0];
@@ -242,7 +258,7 @@ function loadProgram(file: string) {
 }
 
 function selectProgram() {
-    const pr = <HTMLSelectElement> document.getElementById('programs');
+    const pr = <HTMLSelectElement>document.getElementById('programs');
     if (pr.selectedIndex == -1) return;
     const program: string = pr.options.item(pr.selectedIndex).value;
     loadProgram(program);
@@ -257,16 +273,18 @@ window.onload = function () {
     //tinybasic();
     //emulator.memory.set(programs[1], 0);
     //ex1();
-    document.getElementById('run').onclick = () => run(10000);
+    outpt = document.getElementById('output');
+    terminal = document.getElementById('terminal');
+    document.getElementById('run').onclick = () => run(100000);
     document.getElementById('animate').onclick = () => run(1);
     document.getElementById('step').onclick = step;
-    document.getElementById('reset').onclick = reset;
+    document.getElementById('reset').onclick = loadCode;
     document.getElementById('setbreakpoint').onclick = setbreakpoint;
     document.getElementById('clearbreakpoint').onclick = clearbreakpoint;
     document.getElementById('removebreakpoint').onclick = removebreakpoint;
     document.getElementById('load').onclick = loadCode;
-    document.getElementById('output').onkeypress = keypress;
-    document.getElementById('output').onkeydown = keydown;
+    document.getElementById('terminal').onkeypress = keypress;
+    document.getElementById('terminal').onkeydown = keydown;
     document.getElementById('page').onchange = updateui;
     document.getElementById('loadfile').onchange = uploadHex;
     document.getElementById('programs').onchange = selectProgram;
