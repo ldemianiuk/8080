@@ -59,13 +59,24 @@ export class e8080 {
         this.cycles += addcycles;
     }
 
-    private sub(a: number, b: number): number {
-        const b_ = b ^ 0xff;
-        const result = a + b_ + 1;
+
+    private carry(bit: number, a: number, b: number, c: boolean): boolean {
+        const result = a + b + (c ? 1 : 0);
+        const carry = result ^ a ^ b;
+        return (carry & (1 << bit)) !== 0;
+    }
+
+    private add(a: number, b: number, c: boolean): number {
+        const result = a + b + (c ? 1 : 0);
+        this.status.C = this.carry(8, a, b, c);
+        this.status.A = this.carry(4, a, b, c);
         this.setFlags(result);
-        this.setCarry(result);
+        return result;
+    }
+
+    private sub(a: number, b: number, c: boolean): number {
+        const result = this.add(a, b ^ 0xff, !c);
         this.status.C = !this.status.C;
-        this.status.A = ((a & 0x0f) + (b_ & 0x0f) + 1 > 0x0f);
         return result;
     }
 
@@ -76,15 +87,6 @@ export class e8080 {
         this.memory[this.sp[0] + 1] = HI(this.pc[0]);
         this.pc[0] = addr;
         this.cycles += addcycles;
-    }
-
-    private setAC(a: number, b: number) {
-        if ((a & 0x0f) + (b & 0x0f) > 0x0f) {
-            this.status.A = true;
-        }
-        else {
-            this.status.A = false;
-        }
     }
 
     private setCarry(result: number): void {
@@ -179,7 +181,7 @@ export class e8080 {
         const arg1 = this.memory[(this.pc[0] + 1) & 0xffff];
         const arg2 = this.memory[(this.pc[0] + 2) & 0xffff];
 
-        //this.trace[this.pc[0]] = displayWord(this.pc[0]) + ': ' + this.disasm(this.pc[0]);
+        //this.trace[this.pc[0]] = `${displayWord(this.pc[0])}: ${this.disasm(this.pc[0])}`;
 
         this.pc[0] += len;
 

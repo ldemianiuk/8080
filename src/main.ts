@@ -64,6 +64,7 @@ function run(instructions: number): void {
         else {
             //document.querySelectorAll('button').forEach(b => b.disabled = false);
             console.log('CPU halted. Ran ' + emulator.cycles + ' cycles in ' + ((new Date()).getTime() - t0) + ' milliseconds.');
+            //console.log(emulator.trace.filter(x=>x!==undefined).join('\n'));
         }
     }
     fn();
