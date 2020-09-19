@@ -2,6 +2,7 @@ import MemoryMap from './intel-hex';
 import { e8080 } from './e8080';
 import { bdos } from './bdos';
 import 'index.scss';
+import { onErrorResumeNext } from 'rxjs';
 
 
 
@@ -64,10 +65,32 @@ function run(instructions: number): void {
         else {
             //document.querySelectorAll('button').forEach(b => b.disabled = false);
             console.log('CPU halted. Ran ' + emulator.cycles + ' cycles in ' + ((new Date()).getTime() - t0) + ' milliseconds.');
-            //console.log(emulator.trace.filter(x=>x!==undefined).join('\n'));
+            if (emulator.traceon) {
+                downloadTrace();
+            }
         }
     }
     fn();
+}
+
+function downloadTrace() {
+    if (emulator.trace.length === 0) return;
+    emulator.traceon = false;
+    (document.getElementById('trace') as HTMLInputElement).checked = false;
+    let trace = '';
+    for (let i = 0; i < emulator.trace.length; i++) {
+        const instr = emulator.trace[i];
+        if (instr === undefined) continue;
+        trace += `${emulator.calls[i] ? '->\n' : ''}${displayWord(i)}: ${instr}\n`;
+    }
+    download(`trace ${formatDate(new Date())}.txt`, trace);
+}
+
+function formatDate(d: Date): string {
+    function pad2(n: number): string {
+        return ('00' + String(n)).slice(-2);
+    }
+    return `${d.getFullYear()}-${pad2(d.getMonth())}-${pad2(d.getDay())} ${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
 }
 
 
@@ -77,6 +100,7 @@ function reset() {
     emulator.reset();
     output = '';
     document.getElementById('output').innerHTML = '';
+    (document.getElementById('trace') as HTMLInputElement).checked = false;
     updateui();
 }
 
@@ -265,6 +289,29 @@ function selectProgram() {
     loadProgram(program);
 }
 
+function download(filename: string, text: string) {
+    const element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+}
+
+function switchTrace(event: any) {
+    if (event.target.checked) {
+        emulator.traceon = true;
+    }
+    else {
+        emulator.traceon = false;
+        downloadTrace();
+    }
+}
+
 window.onload = function () {
     //emulator.memory.set([0xc3, 0xff, 0xff]);
     //emulator.memory.set([0xc3], 0xffff);
@@ -289,6 +336,7 @@ window.onload = function () {
     document.getElementById('page').onchange = updateui;
     document.getElementById('loadfile').onchange = uploadHex;
     document.getElementById('programs').onchange = selectProgram;
+    document.getElementById('trace').onchange = switchTrace;
     getProgramIndex();
     loadCode();
     updateui();

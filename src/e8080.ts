@@ -50,6 +50,8 @@ export class e8080 {
     input: number[];
     output$: Subject<number>[];
     trace: string[];
+    calls: boolean[];
+    traceon: boolean;
 
     static instructionHandlers: Record<string, Handler> = {};
 
@@ -87,6 +89,9 @@ export class e8080 {
         this.memory[this.sp[0] + 1] = HI(this.pc[0]);
         this.pc[0] = addr;
         this.cycles += addcycles;
+        if (this.traceon) {
+            this.calls[addr] = true;
+        }
     }
 
     private setCarry(result: number): void {
@@ -98,8 +103,6 @@ export class e8080 {
         this.status.Z = (result & 0xff) === 0;
 
         this.status.P = parityCache[result & 0xff];
-
-        // this.status.C = result & 0b100000000;
     }
 
     parity(result: number): boolean {
@@ -167,7 +170,9 @@ export class e8080 {
         this.cycles = 0;
         this.instructions = 0;
         this.input = [];
-        this.trace = new Array(0x10000);
+        this.trace = [];
+        this.calls = [];
+        this.traceon = false;
     }
 
     step(): void {
@@ -177,11 +182,12 @@ export class e8080 {
         const opcode = this.memory[this.pc[0]];
         const instr = instructionTable[opcode];
         const len = instructionSize[opcode];
-        // const args = this.memory.slice(this.pc[0] + 1, this.pc[0] + len);
         const arg1 = this.memory[(this.pc[0] + 1) & 0xffff];
         const arg2 = this.memory[(this.pc[0] + 2) & 0xffff];
 
-        //this.trace[this.pc[0]] = `${displayWord(this.pc[0])}: ${this.disasm(this.pc[0])}`;
+        if (this.traceon && this.trace[this.pc[0]] === undefined) {
+            this.trace[this.pc[0]] = this.disasm(this.pc[0]);
+        }
 
         this.pc[0] += len;
 

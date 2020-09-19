@@ -12,6 +12,11 @@
     <button id='animate'>Animate</button>
     <button id='run'>Run</button>
     <button id='reset'>Reset</button>
+    <span style='margin-left: 10px; font-weight: bold;'>Trace:</span>
+    <label class="switch">
+        <input id='trace' type="checkbox">
+        <span class="slider round"></span>
+    </label>
     <!-- <button onclick="selectProgram()">RESET</button> -->
     <!--     Program:
     <select name="program" id="program" onchange="selectProgram()">
@@ -28,12 +33,13 @@
             <div class="content">
                 <div>
                     <h2>Terminal</h2>
-                    <div id="terminal" tabindex="0"><span id="output"></span><span class="blinking-cursor"> </span></div>
+                    <div id="terminal" tabindex="0"><span id="output"></span><span class="blinking-cursor"> </span>
+                    </div>
                 </div>
                 <div>
                     <h2>Breakpoints</h2>
                     <form id='bpform' action="">
-                         <input id="breakpoint" type="text" size="6">
+                        <input id="breakpoint" type="text" size="6">
                         <input id='setbreakpoint' type="submit" value="Add">
                         <input id='removebreakpoint' type="submit" value="Del">
                         <input id='clearbreakpoint' type="reset" value="Clear">
