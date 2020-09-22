@@ -17,6 +17,9 @@ emulator.output$[1].subscribe(ch => {
     if (ch === 8) {
         output = output.substr(0, output.length - 1);
     }
+    else if (ch === 12) {
+        output = '';
+    }
     else {
         output += String.fromCharCode(ch);
     }
@@ -90,7 +93,7 @@ function formatDate(d: Date): string {
     function pad2(n: number): string {
         return ('00' + String(n)).slice(-2);
     }
-    return `${d.getFullYear()}-${pad2(d.getMonth())}-${pad2(d.getDay())} ${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
+    return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
 }
 
 
