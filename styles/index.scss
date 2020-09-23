@@ -79,13 +79,12 @@ div#memory {
     font-family: 'VT323';
     src: url('VT323-Regular.ttf') format('truetype');
 }
-
-/* @font-face {
+/* 
+@font-face {
     font-family: 'DEC Terminal';
     src: url('DECTERM.ttf') format('truetype');
 }
- */
- 
+  */
 #terminal {
     /* font-family: 'DEC Terminal'; */
     font-family: 'VT323';
@@ -103,7 +102,6 @@ div#memory {
     word-wrap: break-word;
     word-break: break-all;
 }
-
 
 
 /* #output::-webkit-scrollbar {
@@ -211,7 +209,7 @@ input, textarea, select {
 textarea#loadcode {
   width: 50ch;
   height: 20em;
-  white-space: nowrap;
+  white-space: pre;
 }
 
 #page {

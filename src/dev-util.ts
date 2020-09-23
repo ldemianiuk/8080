@@ -50,3 +50,14 @@ function msbintoieee(msbin: number[]): number[] {
    return [view.getFloat32(0, true)];
    }
    
+
+
+function parity(result: number): boolean {
+    let parity = 1;
+    for (let i = 0; i < 8; i++) {
+        if ((result & (1 << i)) !== 0) {
+            parity++;
+        }
+    }
+    return (parity & 1) === 1;
+}

@@ -11,9 +11,8 @@ class Flags {
     C: boolean;
 }
 
+// eslint-disable-next-line no-unused-vars
 const B = 0, C = 1, D = 2, E = 3, H = 4, L = 5, M = 6, A = 7, F = 8;
-
-const FLAG_S = 1 << 7, FLAG_Z = 1 << 6, FLAG_A = 1 << 4, FLAG_P = 1 << 2, FLAG_C = 1;
 
 function WORD(hi: number, lo: number): number {
     return (hi << 8) | lo;
@@ -27,15 +26,9 @@ function HI(n: number): number {
     return n >> 8;
 }
 
-function SRC(opcode: number): number {
-    return opcode & 0b111;
-}
 
-function DST(opcode: number): number {
-    return (opcode >> 3) & 0b111;
-}
-
-type Handler = (_op: number, _arg1?: number, _arg2?: number) => void;
+// eslint-disable-next-line no-unused-vars
+type Handler = (this: e8080, op: number, arg1?: number, arg2?: number) => void;
 
 
 export class e8080 {
@@ -55,7 +48,7 @@ export class e8080 {
 
     static instructionHandlers: Record<string, Handler> = {};
 
-    private ret(addcycles: number = 6): void {
+    ret(addcycles: number = 6): void {
         this.pc[0] = WORD(this.memory[this.sp[0] + 1], this.memory[this.sp[0]]);
         this.sp[0] += 2;
         this.cycles += addcycles;
@@ -68,7 +61,7 @@ export class e8080 {
         return (carry & (1 << bit)) !== 0;
     }
 
-    private add(a: number, b: number, c: boolean): number {
+    add(a: number, b: number, c: boolean): number {
         const result = a + b + (c ? 1 : 0);
         this.status.C = this.carry(8, a, b, c);
         this.status.A = this.carry(4, a, b, c);
@@ -76,13 +69,13 @@ export class e8080 {
         return result;
     }
 
-    private sub(a: number, b: number, c: boolean): number {
+    sub(a: number, b: number, c: boolean): number {
         const result = this.add(a, b ^ 0xff, !c);
         this.status.C = !this.status.C;
         return result;
     }
 
-    private call(hi: number, lo: number, addcycles: number = 6): void {
+    call(hi: number, lo: number, addcycles: number = 6): void {
         const addr = WORD(hi, lo);
         this.sp[0] -= 2;
         this.memory[this.sp[0]] = LO(this.pc[0]);
@@ -94,32 +87,23 @@ export class e8080 {
         }
     }
 
-    private setCarry(result: number): void {
-        this.status.C = (result & 0x100) !== 0;
-    }
-
-    private setFlags(result: number): void {
+    setFlags(result: number): void {
         this.status.S = (result & 0x80) !== 0;
         this.status.Z = (result & 0xff) === 0;
 
         this.status.P = parityCache[result & 0xff];
     }
 
-    parity(result: number): boolean {
-        let parity = 1;
-        for (let i = 0; i < 8; i++) {
-            if ((result & (1 << i)) !== 0) {
-                parity++;
-            }
-        }
-        return (parity & 1) === 1;
-    }
-
-
     getReg(reg: number): number {
         if (reg === F) {
             //S Z 0 A 0 P 1 C
-            const flags = +this.status.C | (1 << 1) | (+this.status.P << 2) | (0 << 3) | (+this.status.A << 4) | (0 << 5) | (+this.status.Z << 6) | (+this.status.S << 7);
+            const flags =
+                +this.status.C |
+                (1 << 1) |
+                (+this.status.P << 2) |
+                (+this.status.A << 4) |
+                (+this.status.Z << 6) |
+                (+this.status.S << 7);
             return flags;
         }
         else if (reg === M) {
@@ -203,32 +187,11 @@ export class e8080 {
         this.instructions++;
     }
 
-    disasm(_addr: number): string;
-    disasm(_addr: number, _num: number): [number, string, string][];
-    disasm(addr: any, num?: any): any {
-        const opcode: number = this.memory[addr];
+    private formatInstruction(opcode: number, len: number, addr: number): string {
         let instr: string = instructionsDisasm[opcode];
-        const len: number = instructionSize[opcode];
-
-        if (num > 0) {
-            let result = [];
-            for (let a = addr, i = 0; i < num && a <= 0xffff; i++) {
-                const opcode: number = this.memory[a];
-                const len: number = instructionSize[opcode];
-                result.push([a, this.disasm(a), instructionDescription[opcode]]);
-                a += len;
-            }
-            return result;
-        }
-
-        if (num === 0) return [];
 
         if (len === 1) {
             return instr;
-        }
-
-        if (instr.includes(' ')) {
-            instr = instr + ',';
         }
 
         if (len == 2) {
@@ -240,6 +203,26 @@ export class e8080 {
         }
     }
 
+    disasm(_addr: number): string;
+    disasm(_addr: number, _num: number): [number, string, string][];
+    disasm(addr: any, num?: any): any {
+        if (num > 0) {
+            let result = [];
+            for (let a = addr, i = 0; i < num && a <= 0xffff; i++) {
+                const opcode: number = this.memory[a];
+                const len: number = instructionSize[opcode];
+                result.push([a, this.formatInstruction(opcode, len, a), instructionDescription[opcode]]);
+                a += len;
+            }
+            return result;
+        }
+
+        const opcode: number = this.memory[addr];
+        const len: number = instructionSize[opcode];
+
+        return this.formatInstruction(opcode, len, addr);
+    }
+
     showFlags(): void {
         console.log('S:' + this.status.S + ' Z:' + this.status.Z + ' A:' + this.status.A + ' P:' + this.status.P + ' C:' + this.status.C);
     }
@@ -247,10 +230,6 @@ export class e8080 {
     static registerHandler(instr: string, handler: Handler): void {
         e8080.instructionHandlers[instr] = handler;
     }
-}
-
-function displayWord(n: number): string {
-    return ('0000' + n.toString(16)).slice(-4);
 }
 
 registerHandlers();

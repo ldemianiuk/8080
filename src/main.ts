@@ -2,30 +2,22 @@ import MemoryMap from './intel-hex';
 import { e8080 } from './e8080';
 import { bdos } from './bdos';
 import 'index.scss';
-import { onErrorResumeNext } from 'rxjs';
+import * as Xterm from 'xterm';
 
+let term: Xterm.Terminal;
 
-
+let output = '';
 
 let emulator = new e8080();
-let output = '';
-let outpt: HTMLElement;
-let terminal: HTMLElement;
 
 emulator.output$[1].subscribe(ch => {
-    if (ch === 13) return;
-    if (ch === 8) {
-        output = output.substr(0, output.length - 1);
-    }
-    else if (ch === 12) {
-        output = '';
+    if (ch === 12) {
+        term.write('\x1b[2J\x1b[1;1H');
     }
     else {
+        term.write(String.fromCharCode(ch));
         output += String.fromCharCode(ch);
     }
-
-    outpt.innerText = output;
-    terminal.scrollTop = terminal.scrollHeight;
 });
 
 let runtimer: number;
@@ -42,8 +34,6 @@ function step(): void {
 
 function run(instructions: number): void {
     if (runtimer) return;
-    //document.querySelectorAll('button').forEach(b => b.disabled = true);
-    document.getElementById('terminal').focus();
     const t0 = new Date().getTime();
     function fn() {
         for (let i = 0; i < instructions; i++) {
@@ -54,7 +44,7 @@ function run(instructions: number): void {
                 updateui();
                 return;
             }
-            if (op === 0xd3 || op === 0xdb) break;
+            //if (op === 0xd3 || op === 0xdb) break;
         }
         if (instructions === 1) {
             updateui();
@@ -66,7 +56,6 @@ function run(instructions: number): void {
             runtimer = window.setTimeout(fn, 0);
         }
         else {
-            //document.querySelectorAll('button').forEach(b => b.disabled = false);
             console.log('CPU halted. Ran ' + emulator.cycles + ' cycles in ' + ((new Date()).getTime() - t0) + ' milliseconds.');
             if (emulator.traceon) {
                 downloadTrace();
@@ -93,16 +82,18 @@ function formatDate(d: Date): string {
     function pad2(n: number): string {
         return ('00' + String(n)).slice(-2);
     }
-    return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
 }
 
 
 function reset() {
+    console.log(output);
+    output = '';
     clearTimeout(runtimer);
     runtimer = null;
     emulator.reset();
-    output = '';
-    document.getElementById('output').innerHTML = '';
+    setTimeout(() => term.reset(), 100); // HACK
+
     (document.getElementById('trace') as HTMLInputElement).checked = false;
     updateui();
 }
@@ -198,41 +189,6 @@ function displayWord(n: number): string {
 }
 
 
-
-function escapeHtmlChar(str: string): string {
-    switch (str) {
-        case '&': return '&amp;';
-        case '<': return '&lt;';
-        case '>': return '&gt;';
-        default: return str;
-    }
-}
-
-
-
-function keydown(ev: KeyboardEvent) {
-    if (ev.keyCode === 8) {
-        emulator.input.push(ev.keyCode);
-        ev.preventDefault();
-        ev.stopPropagation();
-    }
-    else if (ev.keyCode === 27) {
-        document.getElementById('terminal').blur();
-    }
-    else if (ev.ctrlKey && ev.keyCode !== 17) {
-        emulator.input.push(ev.keyCode & 0b00111111);
-        ev.preventDefault();
-        ev.stopPropagation();
-    }
-}
-
-function keypress(ev: KeyboardEvent) {
-    if (ev.keyCode === 8) return;
-    emulator.input.push(ev.keyCode);
-    ev.preventDefault();
-    ev.stopPropagation();
-}
-
 function loadCode(): void {
     const hex = (<HTMLInputElement>document.getElementById('loadcode')).value.replace(/^\s+|\s+$/g, '');
     let memMap = MemoryMap.fromHex(hex);
@@ -316,16 +272,26 @@ function switchTrace(event: any) {
 }
 
 window.onload = function () {
-    //emulator.memory.set([0xc3, 0xff, 0xff]);
-    //emulator.memory.set([0xc3], 0xffff);
-    //cpudiag();
-    //c_test();
-    //basic();
-    //tinybasic();
-    //emulator.memory.set(programs[1], 0);
-    //ex1();
-    outpt = document.getElementById('output');
-    terminal = document.getElementById('terminal');
+    (document as any).fonts.ready.then(() => {
+        Xterm.Terminal.strings.promptLabel = '';
+
+        term = new Xterm.Terminal({
+            convertEol: true,
+            fontFamily: 'VT323',
+            fontSize: 20,
+            rows: 20,
+            cols: 80,
+            theme: { background: '#151617', foreground: '#33ff33' },
+        });
+
+        term.open(document.getElementById('xterm'));
+        //term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ')
+        term.onData((data, _) => {
+            emulator.input.push(...[...data].map(ch => ch.charCodeAt(0)));
+        });
+    });
+
+
     document.getElementById('run').onclick = () => run(100000);
     document.getElementById('animate').onclick = () => run(1);
     document.getElementById('step').onclick = step;
@@ -334,8 +300,6 @@ window.onload = function () {
     document.getElementById('clearbreakpoint').onclick = clearbreakpoint;
     document.getElementById('removebreakpoint').onclick = removebreakpoint;
     document.getElementById('load').onclick = loadCode;
-    document.getElementById('terminal').onkeypress = keypress;
-    document.getElementById('terminal').onkeydown = keydown;
     document.getElementById('page').onchange = updateui;
     document.getElementById('loadfile').onchange = uploadHex;
     document.getElementById('programs').onchange = selectProgram;
@@ -344,4 +308,3 @@ window.onload = function () {
     loadCode();
     updateui();
 }
-

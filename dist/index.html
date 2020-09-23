@@ -3,7 +3,9 @@
 
 <head>
     <script src="main.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="xterm.css">
     <link rel="stylesheet" href="index.css">
+    <link rel="preload" href="VT323-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 </head>
 
 <body>
@@ -17,12 +19,6 @@
         <input id='trace' type="checkbox">
         <span class="slider round"></span>
     </label>
-    <!-- <button onclick="selectProgram()">RESET</button> -->
-    <!--     Program:
-    <select name="program" id="program" onchange="selectProgram()">
-        <option value="0">hello</option>
-        <option value="1">memcpy</option>
-    </select> -->
     <div class="content">
         <div>
             <h2>Code</h2>
@@ -33,8 +29,7 @@
             <div class="content">
                 <div>
                     <h2>Terminal</h2>
-                    <div id="terminal" tabindex="0"><span id="output"></span><span class="blinking-cursor"> </span>
-                    </div>
+                    <div id="xterm"></div>
                 </div>
                 <div>
                     <h2>Breakpoints</h2>
@@ -50,7 +45,7 @@
 
                     <h2>Load Intel Hex</h2>
                     <button id="load">Load</button>
-                    <input type="file" id="loadfile">
+                    <input type="file" id="loadfile" accept=".hex">
                     <br>
                     Sample programs: <select id='programs' style="width: 20ch"></select>
                     <br><br>

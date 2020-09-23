@@ -1,8 +1,8 @@
 import { e8080 } from './e8080';
 
+// eslint-disable-next-line no-unused-vars
 const B = 0, C = 1, D = 2, E = 3, H = 4, L = 5, M = 6, A = 7, F = 8;
 
-const FLAG_S = 1 << 7, FLAG_Z = 1 << 6, FLAG_A = 1 << 4, FLAG_P = 1 << 2, FLAG_C = 1;
 
 function WORD(hi: number, lo: number): number {
     return (hi << 8) | lo;
@@ -93,7 +93,7 @@ export function registerHandlers(): void {
 
         if (this.status.C || msb > 9 || (msb >= 9 && lsb > 9)) {
             correction += 0x60;
-            cy = 1;
+            cy = true;
         }
 
         const result = this.add(a, correction, false);
@@ -339,7 +339,7 @@ export function registerHandlers(): void {
         this.setReg(A, this.sub(this.getReg(A), this.getReg(SRC(op)), false));
     });
     e8080.registerHandler('SUI', function (op, d8) {
-        this.setReg(A, this.sub(this.getReg(A), d8), false);
+        this.setReg(A, this.sub(this.getReg(A), d8, false));
     });
     e8080.registerHandler('XCHG', function (_op) {
         const d = this.getReg(D);
