@@ -96,7 +96,9 @@ function formatDate(d: Date): string {
 function reset() {
     stopRunning();
     emulator.reset();
-    setTimeout(() => term.reset(), 100); // HACK
+    if (term) {
+        term.write('\x1bc'); // ESC c - full reset
+    }
     (document.getElementById('trace') as HTMLInputElement).checked = false;
     updateui();
 }
