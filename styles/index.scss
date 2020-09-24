@@ -216,6 +216,21 @@ textarea#loadcode {
   display: inline;
 }
 
+#breakpoint {
+  font-size: 100%;
+  margin: 5px;
+  font-size: 150%;
+}
+
+#breakpoints {
+  width: 100%;
+  overflow: auto
+}
+
+#programs {
+  width: 20ch;
+}
+
 .tooltip {
   position: relative;
   display: inline-block;

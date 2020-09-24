@@ -19,7 +19,7 @@
             <button id='animate'>Animate</button>
             <button id='run'>Run</button>
             <button id='reset'>Reset</button>
-            Sample programs: <select id='programs' style="width: 20ch"></select>
+            <b>Sample programs:</b> <select id='programs'></select>
             <span style='margin-left: 10px; font-weight: bold;'>Trace:</span>
             <label class="switch">
                 <input id='trace' type="checkbox">
@@ -55,15 +55,14 @@
             <h2>Breakpoints</h2>
             <div class="uibox">
                 <form id='bpform' action="">
-                    <input id="breakpoint" type="text" size="6" autocomplete="off"
-                        style="font-size: 100%; margin: 5px; font-size: 150%">
+                    <input id="breakpoint" type="text" size="6" autocomplete="off">
                     <br>
                     <input id='setbreakpoint' type="submit" title="Add breakpoint" value="Add">
                     <input id='removebreakpoint' type="submit" title="Delete breakpoint" value="Del">
                     <input id='clearbreakpoint' type="reset" title="Clear breakpoints" value="Clear">
                 </form>
                 <br>
-                <select id='breakpoints' size="20" style="width: 100%; overflow: auto">
+                <select id='breakpoints' size="20">
                 </select>
             </div>
         </div>

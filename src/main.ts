@@ -152,7 +152,7 @@ function disasm(instructions: number, threshold: number) {
 }
 
 function updateui(): void {
-    
+
     const disassembly = disasm(15, 10);
 
     document.getElementById('code').innerHTML =
@@ -190,22 +190,38 @@ function updateui(): void {
     document.getElementById('stack').innerHTML = stackwords.join('');
 
     const page = Number((<HTMLInputElement>document.getElementById('page')).value);
+    const base = page * 0x100;
 
-    document.getElementById('memory').innerHTML = '<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;00&#8239;01&#8239;02&#8239;03&#8239;04&#8239;05&#8239;06&#8239;07&#8239;08&#8239;09&#8239;0A&#8239;0B&#8239;0C&#8239;0D&#8239;0E&#8239;0F</b><br>' +
-        Array.from(Array(16).keys()).map(i => '<b>' + ('0000' + (page * 0x100 + i * 16).toString(16).toUpperCase()).slice(-4) + '</b> ' + Array.from(Array(16).keys()).map(j =>
-            ('00' + (emulator.memory[page * 0x100 + i * 16 + j]).toString(16)).slice(-2)
-        ).join('&#8239;') + ' ' +
-            Array.from(Array(16).keys()).map(j => displayChar(emulator.memory[page * 0x100 + i * 16 + j])).join('')
+    document.getElementById('memory').innerHTML =
+        `<b>${'&nbsp;'.repeat(4)}
+        ${[...Array(16).keys()].map(i => displayByte(i)).join('&#8239;')}
+        </b><br>` +
+        [...Array(16).keys()].map(row =>
+            `<b>${displayWord(base + row * 16)}</b> ` +
+            [...Array(16).keys()].map(byte =>
+                displayByte(emulator.memory[base + row * 16 + byte])
+            ).join('&#8239;') + ' ' +
+            [...Array(16).keys()].map(byte =>
+                displayChar(emulator.memory[base + row * 16 + byte])
+            ).join('')
         ).join('<br>');
 
     //document.getElementById('instructions').innerHTML = emulator.instructions.toString();
 
 }
 
+function escapeHTML(s: string): string {
+    switch(s) {
+        case '&': return '&amp;';
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        default: return s;
+    }
+}
+
 function displayChar(ch: number): string {
-    const str = String.fromCharCode(ch);
-    if (str.match(/[A-Za-z0-9]/)) {
-        return str;
+    if (ch >= 32 && ch <= 126) {
+        return escapeHTML(String.fromCharCode(ch));
     }
     else {
         return '.';
