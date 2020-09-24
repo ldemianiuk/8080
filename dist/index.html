@@ -10,107 +10,99 @@
 
 <body>
     <h1><span class="h1">Intel 8080</span></h1>
-    <button id='step'>Step</button>
-    <button id='animate'>Animate</button>
-    <button id='run'>Run</button>
-    <button id='reset'>Reset</button>
-    <span style='margin-left: 10px; font-weight: bold;'>Trace:</span>
-    <label class="switch">
-        <input id='trace' type="checkbox">
-        <span class="slider round"></span>
-    </label>
     <div class="content">
-        <div>
+        <header>
+
+        </header>
+        <div class='top-buttons'>
+            <button id='step'>Step</button>
+            <button id='animate'>Animate</button>
+            <button id='run'>Run</button>
+            <button id='reset'>Reset</button>
+            Sample programs: <select id='programs' style="width: 20ch"></select>
+            <span style='margin-left: 10px; font-weight: bold;'>Trace:</span>
+            <label class="switch">
+                <input id='trace' type="checkbox">
+                <span class="slider round"></span>
+            </label>
+        </div>
+
+        <div class='code'>
             <h2>Code</h2>
-            <ul id="code" class="uibox">
+            <ul id="code" class='uibox'>
             </ul>
         </div>
-        <div>
-            <div class="content">
-                <div>
-                    <h2>Terminal</h2>
-                    <div id="xterm"></div>
-                </div>
-                <div>
-                    <h2>Breakpoints</h2>
-                    <form id='bpform' action="">
-                        <input id="breakpoint" type="text" size="6">
-                        <input id='setbreakpoint' type="submit" value="Add">
-                        <input id='removebreakpoint' type="submit" value="Del">
-                        <input id='clearbreakpoint' type="reset" value="Clear">
-                    </form>
-                    <br>
-                    <select id='breakpoints' size="5" style="width: 20ch; overflow: auto">
-                    </select>
 
-                    <h2>Load Intel Hex</h2>
-                    <button id="load">Load</button>
-                    <input type="file" id="loadfile" accept=".hex">
+        <div class='xterm'>
+            <h2>Terminal</h2>
+            <div id='xterm'></div>
+        </div>
+
+        <div class='stack'>
+            <h2>Stack</h2>
+            <ul id="stack" class="uibox">
+            </ul>
+        </div>
+
+        <div class='memory'>
+            <h2>Memory</h2>
+            Page: <input id="page" type="number" min="0" max="255" value="1">
+            <div id="memory" class="uibox">
+            </div>
+        </div>
+
+        <div class='breakpoints'>
+            <h2>Breakpoints</h2>
+            <div class="uibox">
+                <form id='bpform' action="">
+                    <input id="breakpoint" type="text" size="6" autocomplete="off"
+                        style="font-size: 100%; margin: 5px; font-size: 150%">
                     <br>
-                    Sample programs: <select id='programs' style="width: 20ch"></select>
-                    <br><br>
-                    <textarea id="loadcode" spellcheck="false">:20010000C347011B417373656D626C6564206279205072657474792038303830204173734F
+                    <input id='setbreakpoint' type="submit" title="Add breakpoint" value="Add">
+                    <input id='removebreakpoint' type="submit" title="Delete breakpoint" value="Del">
+                    <input id='clearbreakpoint' type="reset" title="Clear breakpoints" value="Clear">
+                </form>
+                <br>
+                <select id='breakpoints' size="20" style="width: 100%; overflow: auto">
+                </select>
+            </div>
+        </div>
+
+        <div class='hex'>
+            <h2>Intel Hex</h2>
+            <div>
+                <button id="load">Load</button>
+                <input type="file" id="loadfile" accept=".hex">
+                <br>
+                <textarea id="loadcode" spellcheck="false" autocomplete="off">:20010000C347011B417373656D626C6564206279205072657474792038303830204173734F
 :20012000656D626C65720D0A687474703A2F2F73656E73692E6F72672F7E73766F2F69386C
 :100140003038302F0D0A241104010E09CD05007638
 :00000001FF</textarea>
-                </div>
-            </div>
-            <div class="content">
-                <div>
-                    <h2>Registers</h2>
-                    <table id="registers" class="uibox">
-                        <tr>
-                            <th>B</th>
-                            <th>C</th>
-                            <th>D</th>
-                            <th>E</th>
-                            <th>H</th>
-                            <th>L</th>
-                            <th>M</th>
-                            <th>A</th>
-                        </tr>
-                        <tr id="register-values">
-                            <td>00</td>
-                            <td>00</td>
-                            <td>00</td>
-                            <td>00</td>
-                            <td>00</td>
-                            <td>00</td>
-                            <td>00</td>
-                            <td>00</td>
-                        </tr>
-                    </table>
-                </div>
-                <div>
-                    <h2>Flags</h2>
-                    <div id='flags' class="uibox"></div>
-                </div>
-                <div>
-                    <h2>Cycles</h2>
-                    <div id='cycles' class="uibox">0</div>
-                </div>
-                <!-- <div>
-                    <h2>Instructions</h2>
-                    <div id='instructions'>0</div>
-                </div> -->
-            </div>
-
-            <div class="content">
-
-                <div>
-                    <h2>Memory</h2>
-                    Page: <input id="page" type="number" min="0" max="255" value="1">
-                    <div id="memory" class="uibox">
-                    </div>
-                </div>
-
-                <div>
-                    <h2>Stack</h2>
-                    <ul id="stack" class="uibox">
-                    </ul>
-                </div>
             </div>
         </div>
+
+        <div class='registers'>
+            <div>
+                <h2>Registers</h2>
+                <table id="registers" class="uibox">
+                    <tr>
+                        <th>B</th><th>C</th><th>D</th><th>E</th><th>H</th><th>L</th><th>M</th><th>A</th>
+                    </tr>
+                    <tr id="register-values">
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <h2>Flags</h2>
+                <div id='flags' class="uibox"></div>
+            </div>
+            <div>
+                <h2>Cycles</h2>
+                <div id='cycles' class="uibox">0</div>
+            </div>
+
+        </div>
+
     </div>
 </body>
 

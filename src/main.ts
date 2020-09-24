@@ -4,11 +4,13 @@ import { bdos } from './bdos';
 import 'index.scss';
 import * as Xterm from 'xterm';
 
-let term: Xterm.Terminal;
-
-let output = '';
-
 let emulator = new e8080();
+let term: Xterm.Terminal;
+let output = '';
+let runtimer: number;
+let breakpoints: number[] = [];
+let disasmstart: number = null;
+
 
 emulator.output$[1].subscribe(ch => {
     if (ch === 12) {
@@ -20,9 +22,6 @@ emulator.output$[1].subscribe(ch => {
     }
 });
 
-let runtimer: number;
-let breakpoints: number[] = [];
-let disasmstart: number = null;
 
 
 function step(): void {
@@ -138,14 +137,19 @@ function updatecycles() {
 
 function updateui(): void {
     if (disasmstart === null || emulator.pc[0] < disasmstart) disasmstart = emulator.pc[0];
-    let ds = emulator.disasm(disasmstart, 20);
-    if (emulator.pc[0] > ds[15][0]) {
+    let ds = emulator.disasm(disasmstart, 15);
+    if (emulator.pc[0] > ds[10][0]) {
         disasmstart = emulator.pc[0];
-        ds = emulator.disasm(disasmstart, 20);
+        ds = emulator.disasm(disasmstart, 15);
     }
     document.getElementById('code').innerHTML =
         ds.map(instr => `<li ${instr[0] === emulator.pc[0] ? 'id="current"' : ''}><span class="tooltip"><span class="address">${displayWord(instr[0])}</span>: ${instr[1]}<span class="tooltiptext">${instr[2]}</span></span></li>`).join('');
+        
     document.getElementById('register-values').innerHTML = [0, 1, 2, 3, 4, 5, 6, 7].map(r => '<td>' + ('00' + emulator.getReg(r).toString(16)).slice(-2) + '</td>').join('');
+    document.getElementById('flags').innerHTML = 'S:' + (+emulator.status.S) + ' Z:' + (+emulator.status.Z) + ' A:' + (+emulator.status.A) + ' P:' + (+emulator.status.P) + ' C:' + (+emulator.status.C);
+    document.getElementById('cycles').innerHTML = emulator.cycles.toString();
+
+
     const stack = Array.from(emulator.memory.slice(emulator.sp[0], Math.min(emulator.sp[0] + 40, 0xffff)));
     const stackwords = [];
     let addr = emulator.sp[0];
@@ -157,6 +161,7 @@ function updateui(): void {
         addr += 2;
     }
     document.getElementById('stack').innerHTML = stackwords.join('');
+
     const page: number = Number((<HTMLInputElement>document.getElementById('page')).value);
     document.getElementById('memory').innerHTML = '<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;00&#8239;01&#8239;02&#8239;03&#8239;04&#8239;05&#8239;06&#8239;07&#8239;08&#8239;09&#8239;0A&#8239;0B&#8239;0C&#8239;0D&#8239;0E&#8239;0F</b><br>' +
         Array.from(Array(16).keys()).map(i => '<b>' + ('0000' + (page * 0x100 + i * 16).toString(16).toUpperCase()).slice(-4) + '</b> ' + Array.from(Array(16).keys()).map(j =>
@@ -164,10 +169,9 @@ function updateui(): void {
         ).join('&#8239;') + ' ' +
             Array.from(Array(16).keys()).map(j => displayChar(emulator.memory[page * 0x100 + i * 16 + j])).join('')
         ).join('<br>');
-    document.getElementById('flags').innerHTML = 'S:' + (+emulator.status.S) + ' Z:' + (+emulator.status.Z) + ' A:' + (+emulator.status.A) + ' P:' + (+emulator.status.P) + ' C:' + (+emulator.status.C);
-    //JSON.stringify(emulator.status).replace(/['{}]/g,'').replace(/,/g,' ');
-    document.getElementById('cycles').innerHTML = emulator.cycles.toString();
+    
     //document.getElementById('instructions').innerHTML = emulator.instructions.toString();
+
 }
 
 function displayChar(ch: number): string {
@@ -238,6 +242,7 @@ function loadProgram(file: string) {
     fetch(`programs/${file}`).then(response => response.text()).then(text => {
         let hex = <HTMLInputElement>document.getElementById('loadcode');
         hex.value = text;
+        loadCode();
     }).catch(e => console.log(e));
 }
 
@@ -300,10 +305,10 @@ window.onload = function () {
     document.getElementById('clearbreakpoint').onclick = clearbreakpoint;
     document.getElementById('removebreakpoint').onclick = removebreakpoint;
     document.getElementById('load').onclick = loadCode;
-    document.getElementById('page').onchange = updateui;
     document.getElementById('loadfile').onchange = uploadHex;
     document.getElementById('programs').onchange = selectProgram;
     document.getElementById('trace').onchange = switchTrace;
+    document.getElementById('page').onchange = updateui;
     getProgramIndex();
     loadCode();
     updateui();
