@@ -4,7 +4,7 @@ import { bdos } from './bdos';
 import 'index.scss';
 import * as Xterm from 'xterm';
 
-let emulator = new e8080();
+const emulator = new e8080();
 let term: Xterm.Terminal;
 let output = '';
 let runtimer: number;
@@ -13,6 +13,7 @@ let disasmstart: number = null;
 
 
 emulator.output$[1].subscribe(ch => {
+    // clear the terminal on \f
     if (ch === 12) {
         term.write('\x1b[2J\x1b[1;1H');
     }
@@ -25,18 +26,25 @@ emulator.output$[1].subscribe(ch => {
 
 
 function step(): void {
-    clearTimeout(runtimer);
-    runtimer = null;
+    stopRunning();
     emulator.step();
     updateui();
 }
+
+function stopRunning(): void {
+    if (runtimer !== null) {
+        clearTimeout(runtimer);
+        runtimer = null;
+    }
+}
+
 
 function run(instructions: number): void {
     if (runtimer) return;
     const t0 = new Date().getTime();
     function fn() {
         for (let i = 0; i < instructions; i++) {
-            const op = emulator.memory[emulator.pc[0]];
+            //const op = emulator.memory[emulator.pc[0]];
             emulator.step();
             if (breakpoints.includes(emulator.pc[0])) {
                 runtimer = null;
@@ -86,13 +94,9 @@ function formatDate(d: Date): string {
 
 
 function reset() {
-    console.log(output);
-    output = '';
-    clearTimeout(runtimer);
-    runtimer = null;
+    stopRunning();
     emulator.reset();
     setTimeout(() => term.reset(), 100); // HACK
-
     (document.getElementById('trace') as HTMLInputElement).checked = false;
     updateui();
 }
@@ -104,7 +108,7 @@ function setbreakpoint(): boolean {
     if (breakpoints.includes(addr)) return false;
     breakpoints.push(addr);
     const bp = <HTMLSelectElement>document.getElementById('breakpoints');
-    let option = document.createElement('option');
+    const option = document.createElement('option');
     option.text = displayWord(addr) + ': ' + emulator.disasm(addr);
     option.value = addr.toString(16);
     bp.add(option);
@@ -135,18 +139,41 @@ function updatecycles() {
     document.getElementById('cycles').innerHTML = emulator.cycles.toString();
 }
 
-function updateui(): void {
-    if (disasmstart === null || emulator.pc[0] < disasmstart) disasmstart = emulator.pc[0];
-    let ds = emulator.disasm(disasmstart, 15);
-    if (emulator.pc[0] > ds[10][0]) {
+function disasm(instructions: number, threshold: number) {
+    if (disasmstart === null || emulator.pc[0] < disasmstart) {
         disasmstart = emulator.pc[0];
-        ds = emulator.disasm(disasmstart, 15);
     }
+    let ds = emulator.disasm(disasmstart, instructions);
+    if (emulator.pc[0] > ds[threshold].addr) {
+        disasmstart = emulator.pc[0];
+        ds = emulator.disasm(disasmstart, instructions);
+    }
+    return ds;
+}
+
+function updateui(): void {
+    
+    const disassembly = disasm(15, 10);
+
     document.getElementById('code').innerHTML =
-        ds.map(instr => `<li ${instr[0] === emulator.pc[0] ? 'id="current"' : ''}><span class="tooltip"><span class="address">${displayWord(instr[0])}</span>: ${instr[1]}<span class="tooltiptext">${instr[2]}</span></span></li>`).join('');
-        
-    document.getElementById('register-values').innerHTML = [0, 1, 2, 3, 4, 5, 6, 7].map(r => '<td>' + ('00' + emulator.getReg(r).toString(16)).slice(-2) + '</td>').join('');
-    document.getElementById('flags').innerHTML = 'S:' + (+emulator.status.S) + ' Z:' + (+emulator.status.Z) + ' A:' + (+emulator.status.A) + ' P:' + (+emulator.status.P) + ' C:' + (+emulator.status.C);
+        disassembly.map(ds =>
+            `<li ${ds.addr === emulator.pc[0] ? 'id="current"' : ''}>
+                <span class="tooltip">
+                    <span class="address">${displayWord(ds.addr)}</span>
+                    : ${ds.instr}
+                    <span class="tooltiptext">
+                    ${ds.description}
+                </span>
+            </span>
+        </li>`).join('');
+
+    document.getElementById('register-values').innerHTML =
+        [0, 1, 2, 3, 4, 5, 6, 7].map(r =>
+            `<td>${displayByte(emulator.getReg(r))}</td>`).join('');
+
+    document.getElementById('flags').innerHTML =
+        `S:${+emulator.status.S} Z:${+emulator.status.Z} A:${+emulator.status.A} P:${+emulator.status.P} C:${+emulator.status.C}`;
+
     document.getElementById('cycles').innerHTML = emulator.cycles.toString();
 
 
@@ -157,19 +184,20 @@ function updateui(): void {
         const lo = stack.shift();
         const hi = stack.shift();
         const val = lo + (hi << 8)
-        stackwords.push('<li>' + ('0000' + addr.toString(16)).slice(-4) + ': ' + ('0000' + val.toString(16)).slice(-4) + '</li>');
+        stackwords.push(`<li>${displayWord(addr)}: ${displayWord(val)}</li>`);
         addr += 2;
     }
     document.getElementById('stack').innerHTML = stackwords.join('');
 
-    const page: number = Number((<HTMLInputElement>document.getElementById('page')).value);
+    const page = Number((<HTMLInputElement>document.getElementById('page')).value);
+
     document.getElementById('memory').innerHTML = '<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;00&#8239;01&#8239;02&#8239;03&#8239;04&#8239;05&#8239;06&#8239;07&#8239;08&#8239;09&#8239;0A&#8239;0B&#8239;0C&#8239;0D&#8239;0E&#8239;0F</b><br>' +
         Array.from(Array(16).keys()).map(i => '<b>' + ('0000' + (page * 0x100 + i * 16).toString(16).toUpperCase()).slice(-4) + '</b> ' + Array.from(Array(16).keys()).map(j =>
             ('00' + (emulator.memory[page * 0x100 + i * 16 + j]).toString(16)).slice(-2)
         ).join('&#8239;') + ' ' +
             Array.from(Array(16).keys()).map(j => displayChar(emulator.memory[page * 0x100 + i * 16 + j])).join('')
         ).join('<br>');
-    
+
     //document.getElementById('instructions').innerHTML = emulator.instructions.toString();
 
 }
@@ -195,13 +223,13 @@ function displayWord(n: number): string {
 
 function loadCode(): void {
     const hex = (<HTMLInputElement>document.getElementById('loadcode')).value.replace(/^\s+|\s+$/g, '');
-    let memMap = MemoryMap.fromHex(hex);
+    const memMap = MemoryMap.fromHex(hex);
 
     reset();
     emulator.memory.set([0x76, 0, 0, 0, 0, 0xc3, 0x06, 0xec, 0x76], 0);
     emulator.memory.set(bdos, 0xec06);
 
-    for (var [key, value] of memMap) {
+    for (const [key, value] of memMap) {
         emulator.memory.set(value, key);
     }
 
@@ -215,13 +243,13 @@ function loadCode(): void {
     updateui();
 }
 
-function uploadHex(event: any) {
+function uploadHex(event: Event) {
     const reader = new FileReader();
     reader.onload = (txt) => {
-        let hex = <HTMLInputElement>document.getElementById('loadcode');
+        const hex = <HTMLInputElement>document.getElementById('loadcode');
         hex.value = <string>txt.target.result;
     };
-    reader.readAsText(event.target.files[0]);
+    reader.readAsText((event.target as HTMLInputElement).files[0]);
 }
 
 function getProgramIndex() {
@@ -229,7 +257,7 @@ function getProgramIndex() {
         const programs = text.split('\n').map(line => line.split(':'));
         const pr = <HTMLSelectElement>document.getElementById('programs');
         programs.map(program => {
-            let option = document.createElement('option');
+            const option = document.createElement('option');
             option.value = program[0];
             option.text = program[1];
             pr.options.add(option);
@@ -240,7 +268,7 @@ function getProgramIndex() {
 
 function loadProgram(file: string) {
     fetch(`programs/${file}`).then(response => response.text()).then(text => {
-        let hex = <HTMLInputElement>document.getElementById('loadcode');
+        const hex = <HTMLInputElement>document.getElementById('loadcode');
         hex.value = text;
         loadCode();
     }).catch(e => console.log(e));
@@ -266,8 +294,8 @@ function download(filename: string, text: string) {
     document.body.removeChild(element);
 }
 
-function switchTrace(event: any) {
-    if (event.target.checked) {
+function switchTrace(event: Event) {
+    if ((event.target as HTMLInputElement).checked) {
         emulator.traceon = true;
     }
     else {
@@ -277,6 +305,7 @@ function switchTrace(event: any) {
 }
 
 window.onload = function () {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (document as any).fonts.ready.then(() => {
         Xterm.Terminal.strings.promptLabel = '';
 

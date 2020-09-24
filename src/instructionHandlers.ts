@@ -1,6 +1,7 @@
 import { e8080 } from './e8080';
 
-// eslint-disable-next-line no-unused-vars
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const B = 0, C = 1, D = 2, E = 3, H = 4, L = 5, M = 6, A = 7, F = 8;
 
 
@@ -80,7 +81,7 @@ export function registerHandlers(): void {
     e8080.registerHandler('CPO', function (opcode, lo, hi) { if (!this.status.P) this.call(hi, lo) });
     e8080.registerHandler('CZ', function (opcode, lo, hi) { if (this.status.Z) this.call(hi, lo) });
     e8080.registerHandler('DAA', function (_op) {
-        let a = this.getReg(A);
+        const a = this.getReg(A);
         let cy = this.status.C;
         let correction = 0;
 
@@ -217,6 +218,7 @@ export function registerHandlers(): void {
     e8080.registerHandler('MVI', function (op, d8) {
         this.setReg(DST(op), d8);
     });
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     e8080.registerHandler('NOP', function (_op) { });
     e8080.registerHandler('ORA', function (op) {
         const result = this.getReg(A) | this.getReg(SRC(op));

@@ -11,7 +11,7 @@ class Flags {
     C: boolean;
 }
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const B = 0, C = 1, D = 2, E = 3, H = 4, L = 5, M = 6, A = 7, F = 8;
 
 function WORD(hi: number, lo: number): number {
@@ -48,7 +48,7 @@ export class e8080 {
 
     static instructionHandlers: Record<string, Handler> = {};
 
-    ret(addcycles: number = 6): void {
+    ret(addcycles = 6): void {
         this.pc[0] = WORD(this.memory[this.sp[0] + 1], this.memory[this.sp[0]]);
         this.sp[0] += 2;
         this.cycles += addcycles;
@@ -75,7 +75,7 @@ export class e8080 {
         return result;
     }
 
-    call(hi: number, lo: number, addcycles: number = 6): void {
+    call(hi: number, lo: number, addcycles = 6): void {
         const addr = WORD(hi, lo);
         this.sp[0] -= 2;
         this.memory[this.sp[0]] = LO(this.pc[0]);
@@ -188,7 +188,7 @@ export class e8080 {
     }
 
     private formatInstruction(opcode: number, len: number, addr: number): string {
-        let instr: string = instructionsDisasm[opcode];
+        const instr: string = instructionsDisasm[opcode];
 
         if (len === 1) {
             return instr;
@@ -203,15 +203,20 @@ export class e8080 {
         }
     }
 
-    disasm(_addr: number): string;
-    disasm(_addr: number, _num: number): [number, string, string][];
-    disasm(addr: any, num?: any): any {
+
+    disasm(addr: number): string;
+    disasm(addr: number, num: number): {addr: number, instr: string, description: string}[];
+    disasm(addr: number, num?: number): string | {addr: number, instr: string, description: string}[] {
         if (num > 0) {
-            let result = [];
+            const result = [];
             for (let a = addr, i = 0; i < num && a <= 0xffff; i++) {
                 const opcode: number = this.memory[a];
                 const len: number = instructionSize[opcode];
-                result.push([a, this.formatInstruction(opcode, len, a), instructionDescription[opcode]]);
+                result.push({
+                    addr: a,
+                    instr: this.formatInstruction(opcode, len, a),
+                    description: instructionDescription[opcode]
+                });
                 a += len;
             }
             return result;
