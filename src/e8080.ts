@@ -34,8 +34,8 @@ type Handler = (this: e8080, op: number, arg1?: number, arg2?: number) => void;
 export class e8080 {
     memory: Uint8Array;
     registers: Uint8Array; // B, C, D, E, H, L, M, A
-    sp: Uint16Array;
-    pc: Uint16Array;
+    _sp: Uint16Array;
+    _pc: Uint16Array;
     status: Flags;
     running: boolean;
     cycles: number;
@@ -48,9 +48,25 @@ export class e8080 {
 
     static instructionHandlers: Record<string, Handler> = {};
 
+    get pc(): number {
+        return this._pc[0];
+    }
+
+    set pc(val: number) {
+        this._pc[0] = val;
+    }
+
+    get sp(): number {
+        return this._sp[0];
+    }
+
+    set sp(val: number) {
+        this._sp[0] = val;
+    }
+
     ret(addcycles = 6): void {
-        this.pc[0] = WORD(this.memory[this.sp[0] + 1], this.memory[this.sp[0]]);
-        this.sp[0] += 2;
+        this.pc = WORD(this.memory[this.sp + 1], this.memory[this.sp]);
+        this.sp += 2;
         this.cycles += addcycles;
     }
 
@@ -77,10 +93,10 @@ export class e8080 {
 
     call(hi: number, lo: number, addcycles = 6): void {
         const addr = WORD(hi, lo);
-        this.sp[0] -= 2;
-        this.memory[this.sp[0]] = LO(this.pc[0]);
-        this.memory[this.sp[0] + 1] = HI(this.pc[0]);
-        this.pc[0] = addr;
+        this.sp -= 2;
+        this.memory[this.sp] = LO(this.pc);
+        this.memory[this.sp + 1] = HI(this.pc);
+        this.pc = addr;
         this.cycles += addcycles;
         if (this.traceon) {
             this.calls[addr] = true;
@@ -135,8 +151,8 @@ export class e8080 {
         this.status = new Flags();
         this.memory = new Uint8Array(0x10000);
         this.registers = new Uint8Array(8);
-        this.sp = new Uint16Array(1);
-        this.pc = new Uint16Array(1);
+        this._sp = new Uint16Array(1);
+        this._pc = new Uint16Array(1);
         this.output$ = new Array(256);
         for (let i = 0; i < 256; i++) {
             this.output$[i] = new Subject<number>();
@@ -147,8 +163,8 @@ export class e8080 {
     reset(): void {
         this.registers.fill(0);
         this.memory.fill(0);
-        this.sp[0] = 0xf000;
-        this.pc[0] = 0;
+        this.sp = 0xf000;
+        this.pc = 0;
         this.status.S = this.status.Z = this.status.A = this.status.P = this.status.C = false;
         this.running = true;
         this.cycles = 0;
@@ -163,17 +179,17 @@ export class e8080 {
         if (!this.running) {
             return;
         }
-        const opcode = this.memory[this.pc[0]];
+        const opcode = this.memory[this.pc];
         const instr = instructionTable[opcode];
         const len = instructionSize[opcode];
-        const arg1 = this.memory[(this.pc[0] + 1) & 0xffff];
-        const arg2 = this.memory[(this.pc[0] + 2) & 0xffff];
+        const arg1 = this.memory[(this.pc + 1) & 0xffff];
+        const arg2 = this.memory[(this.pc + 2) & 0xffff];
 
-        if (this.traceon && this.trace[this.pc[0]] === undefined) {
-            this.trace[this.pc[0]] = this.disasm(this.pc[0]);
+        if (this.traceon && this.trace[this.pc] === undefined) {
+            this.trace[this.pc] = this.disasm(this.pc);
         }
 
-        this.pc[0] += len;
+        this.pc += len;
 
         const handler = e8080.instructionHandlers[instr];
         if (handler) {

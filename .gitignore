@@ -7,5 +7,3 @@ cputest.asm
 src/code.txt
 src/isolate*
 src/prof*
-
-src/node.ts

@@ -44,9 +44,9 @@ function run(instructions: number): void {
     const t0 = new Date().getTime();
     function fn() {
         for (let i = 0; i < instructions; i++) {
-            //const op = emulator.memory[emulator.pc[0]];
+            //const op = emulator.memory[emulator.pc];
             emulator.step();
-            if (breakpoints.includes(emulator.pc[0])) {
+            if (breakpoints.includes(emulator.pc)) {
                 runtimer = null;
                 updateui();
                 return;
@@ -140,12 +140,12 @@ function updatecycles() {
 }
 
 function disasm(instructions: number, threshold: number) {
-    if (disasmstart === null || emulator.pc[0] < disasmstart) {
-        disasmstart = emulator.pc[0];
+    if (disasmstart === null || emulator.pc < disasmstart) {
+        disasmstart = emulator.pc;
     }
     let ds = emulator.disasm(disasmstart, instructions);
-    if (emulator.pc[0] > ds[threshold].addr) {
-        disasmstart = emulator.pc[0];
+    if (emulator.pc > ds[threshold].addr) {
+        disasmstart = emulator.pc;
         ds = emulator.disasm(disasmstart, instructions);
     }
     return ds;
@@ -157,7 +157,7 @@ function updateui(): void {
 
     document.getElementById('code').innerHTML =
         disassembly.map(ds =>
-            `<li ${ds.addr === emulator.pc[0] ? 'id="current"' : ''}>
+            `<li ${ds.addr === emulator.pc ? 'id="current"' : ''}>
                 <span class="tooltip">
                     <span class="address">${displayWord(ds.addr)}</span>
                     : ${ds.instr}
@@ -177,9 +177,9 @@ function updateui(): void {
     document.getElementById('cycles').innerHTML = emulator.cycles.toString();
 
 
-    const stack = Array.from(emulator.memory.slice(emulator.sp[0], Math.min(emulator.sp[0] + 40, 0xffff)));
+    const stack = Array.from(emulator.memory.slice(emulator.sp, Math.min(emulator.sp + 40, 0xffff)));
     const stackwords = [];
-    let addr = emulator.sp[0];
+    let addr = emulator.sp;
     while (stack.length > 1) {
         const lo = stack.shift();
         const hi = stack.shift();
@@ -250,10 +250,10 @@ function loadCode(): void {
     }
 
     if (memMap.ip !== null) {
-        emulator.pc[0] = memMap.ip;
+        emulator.pc = memMap.ip;
     }
     else {
-        emulator.pc[0] = 0x100;
+        emulator.pc = 0x100;
     }
 
     updateui();

@@ -106,7 +106,7 @@ export function registerHandlers(): void {
     e8080.registerHandler('DAD', function (op) {
         let value: number;
         if (op === 0x39) {
-            value = this.sp[0];
+            value = this.sp;
         }
         else {
             const lo = DST(op);
@@ -126,7 +126,7 @@ export function registerHandlers(): void {
     });
     e8080.registerHandler('DCX', function (op) {
         if (op === 0x3B) {
-            this.sp[0]--;
+            this.sp--;
         }
         else {
             const lo = DST(op);
@@ -140,7 +140,7 @@ export function registerHandlers(): void {
     e8080.registerHandler('EI', function (_op) { /* not implemented */ });
     e8080.registerHandler('HLT', function (_op) {
         this.running = false;
-        this.pc[0]--;
+        this.pc--;
     });
     e8080.registerHandler('IN', function (op, d8) {
         switch (d8) {
@@ -163,7 +163,7 @@ export function registerHandlers(): void {
     });
     e8080.registerHandler('INX', function (op) {
         if (op === 0x33) {
-            this.sp[0]++;
+            this.sp++;
         }
         else {
             const hi = DST(op);
@@ -173,15 +173,15 @@ export function registerHandlers(): void {
             this.setReg(lo, LO(result));
         }
     });
-    e8080.registerHandler('JC', function (op, lo, hi) { if (this.status.C) this.pc[0] = WORD(hi, lo); });
-    e8080.registerHandler('JM', function (op, lo, hi) { if (this.status.S) this.pc[0] = WORD(hi, lo); });
-    e8080.registerHandler('JMP', function (op, lo, hi) { this.pc[0] = WORD(hi, lo); });
-    e8080.registerHandler('JNC', function (op, lo, hi) { if (!this.status.C) this.pc[0] = WORD(hi, lo); });
-    e8080.registerHandler('JNZ', function (op, lo, hi) { if (!this.status.Z) this.pc[0] = WORD(hi, lo); });
-    e8080.registerHandler('JP', function (op, lo, hi) { if (!this.status.S) this.pc[0] = WORD(hi, lo); });
-    e8080.registerHandler('JPE', function (op, lo, hi) { if (this.status.P) this.pc[0] = WORD(hi, lo); });
-    e8080.registerHandler('JPO', function (op, lo, hi) { if (!this.status.P) this.pc[0] = WORD(hi, lo); });
-    e8080.registerHandler('JZ', function (op, lo, hi) { if (this.status.Z) this.pc[0] = WORD(hi, lo); });
+    e8080.registerHandler('JC', function (op, lo, hi) { if (this.status.C) this.pc = WORD(hi, lo); });
+    e8080.registerHandler('JM', function (op, lo, hi) { if (this.status.S) this.pc = WORD(hi, lo); });
+    e8080.registerHandler('JMP', function (op, lo, hi) { this.pc = WORD(hi, lo); });
+    e8080.registerHandler('JNC', function (op, lo, hi) { if (!this.status.C) this.pc = WORD(hi, lo); });
+    e8080.registerHandler('JNZ', function (op, lo, hi) { if (!this.status.Z) this.pc = WORD(hi, lo); });
+    e8080.registerHandler('JP', function (op, lo, hi) { if (!this.status.S) this.pc = WORD(hi, lo); });
+    e8080.registerHandler('JPE', function (op, lo, hi) { if (this.status.P) this.pc = WORD(hi, lo); });
+    e8080.registerHandler('JPO', function (op, lo, hi) { if (!this.status.P) this.pc = WORD(hi, lo); });
+    e8080.registerHandler('JZ', function (op, lo, hi) { if (this.status.Z) this.pc = WORD(hi, lo); });
     e8080.registerHandler('LDA', function (op, lo, hi) {
         this.setReg(A, this.memory[WORD(hi, lo)]);
     });
@@ -203,7 +203,7 @@ export function registerHandlers(): void {
     });
     e8080.registerHandler('LXI', function (op, lo, hi) {
         if (op === 0x31) {
-            this.sp[0] = WORD(hi, lo);
+            this.sp = WORD(hi, lo);
         }
         else {
             const reghi = DST(op);
@@ -243,11 +243,11 @@ export function registerHandlers(): void {
         }
     });
     e8080.registerHandler('PCHL', function (_op) {
-        this.pc[0] = WORD(this.getReg(H), this.getReg(L));
+        this.pc = WORD(this.getReg(H), this.getReg(L));
     });
     e8080.registerHandler('POP', function (op) {
-        const value = WORD(this.memory[this.sp[0] + 1], this.memory[this.sp[0]]);
-        this.sp[0] += 2;
+        const value = WORD(this.memory[this.sp + 1], this.memory[this.sp]);
+        this.sp += 2;
         // POP PSW
         if (op === 0xf1) {
             this.setReg(A, HI(value));
@@ -267,9 +267,9 @@ export function registerHandlers(): void {
         else {
             value = WORD(this.getReg(DST(op)), this.getReg(DST(op) + 1));
         }
-        this.sp[0] -= 2;
-        this.memory[this.sp[0]] = LO(value);
-        this.memory[this.sp[0] + 1] = HI(value);
+        this.sp -= 2;
+        this.memory[this.sp] = LO(value);
+        this.memory[this.sp + 1] = HI(value);
     });
     e8080.registerHandler('RAL', function (_op) {
         const a = this.getReg(A);
@@ -317,7 +317,7 @@ export function registerHandlers(): void {
         this.memory[(WORD(hi, lo) + 1) & 0xffff] = this.getReg(H);
     });
     e8080.registerHandler('SPHL', function (_op) {
-        this.sp[0] = WORD(this.getReg(H), this.getReg(L));
+        this.sp = WORD(this.getReg(H), this.getReg(L));
     });
     e8080.registerHandler('STA', function (op, lo, hi) {
         this.memory[WORD(hi, lo)] = this.getReg(A);
@@ -368,10 +368,10 @@ export function registerHandlers(): void {
     e8080.registerHandler('XTHL', function (_op) {
         const l = this.getReg(L);
         const h = this.getReg(H);
-        this.setReg(L, this.memory[this.sp[0]]);
-        this.setReg(H, this.memory[this.sp[0] + 1]);
-        this.memory[this.sp[0]] = l;
-        this.memory[this.sp[0] + 1] = h;
+        this.setReg(L, this.memory[this.sp]);
+        this.setReg(H, this.memory[this.sp + 1]);
+        this.memory[this.sp] = l;
+        this.memory[this.sp + 1] = h;
     });
 
 }
