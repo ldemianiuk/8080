@@ -9,6 +9,7 @@ let term: Xterm.Terminal;
 let output = '';
 let runtimer: number;
 let breakpoints: number[] = [];
+let watches: number[] = [];
 let disasmstart: number = null;
 
 
@@ -137,6 +138,41 @@ function clearbreakpoint(): void {
     }
 }
 
+
+function addwatch(): boolean {
+    const wtInput = <HTMLInputElement>document.getElementById('watch');
+    const addr: number = parseInt(wtInput.value, 16);
+    if (isNaN(addr)) return false;
+    if (watches.includes(addr)) return false;
+    watches.push(addr);
+    const wt = <HTMLSelectElement>document.getElementById('watches');
+    const option = document.createElement('option');
+    option.text = displayWord(addr) + ': ' + displayByte(emulator.memory[addr]);
+    option.value = addr.toString(16);
+    wt.add(option);
+    wtInput.value = '';
+    return false;
+}
+
+function removewatch(): boolean {
+    const wt = <HTMLSelectElement>document.getElementById('watches');
+    const i = wt.selectedIndex;
+    if (i < 0) return false;
+    const addr: number = parseInt(wt.options.item(i).value, 16);
+    watches = watches.filter(a => a !== addr);
+    wt.options.remove(i);
+    return false;
+}
+
+function clearwatch(): void {
+    watches = [];
+    const wt = <HTMLSelectElement>document.getElementById('watches');
+    const len = wt.options.length;
+    for (let i = len - 1; i >= 0; i--) {
+        wt.options.remove(i);
+    }
+}
+
 function updatecycles() {
     document.getElementById('cycles').innerHTML = emulator.cycles.toString();
 }
@@ -209,6 +245,13 @@ function updateui(): void {
         ).join('<br>');
 
     //document.getElementById('instructions').innerHTML = emulator.instructions.toString();
+
+    const wt = <HTMLSelectElement>document.getElementById('watches');
+    for (let i = wt.options.length - 1; i >=0; i--) {
+        const opt = wt.options.item(i);
+        const addr = parseInt(opt.value, 16);
+        opt.text = displayWord(addr) + ': ' + displayByte(emulator.memory[addr]);
+    }
 
 }
 
@@ -351,6 +394,9 @@ window.onload = function () {
     document.getElementById('setbreakpoint').onclick = setbreakpoint;
     document.getElementById('clearbreakpoint').onclick = clearbreakpoint;
     document.getElementById('removebreakpoint').onclick = removebreakpoint;
+    document.getElementById('addwatch').onclick = addwatch;
+    document.getElementById('clearwatch').onclick = clearwatch;
+    document.getElementById('removewatch').onclick = removewatch;
     document.getElementById('load').onclick = loadCode;
     document.getElementById('loadfile').onchange = uploadHex;
     document.getElementById('programs').onchange = selectProgram;
