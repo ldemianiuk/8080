@@ -6,7 +6,7 @@
     <script src="main.js" charset="utf-8"></script>
     <link rel="stylesheet" href="xterm.css">
     <link rel="stylesheet" href="index.css">
-    <link rel="preload" href="VT323-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <link rel="preload" href="VT323-Regular.ttf" as="font" type="font/ttf">
 </head>
 
 <body>
@@ -63,7 +63,23 @@
                     <input id='clearbreakpoint' type="reset" title="Clear breakpoints" value="Clear">
                 </form>
                 <br>
-                <select id='breakpoints' size="20">
+                <select id='breakpoints' size="10">
+                </select>
+            </div>
+        </div>
+
+        <div class='watch'>
+            <h2>Watch</h2>
+            <div class="uibox">
+                <form id='watchform' action="">
+                    <input id="watch" type="text" size="6" autocomplete="off">
+                    <br>
+                    <input id='addwatch' type="submit" title="Add address" value="Add">
+                    <input id='removewatch' type="submit" title="Delete address" value="Del">
+                    <input id='clearwatch' type="reset" title="Clear addresses" value="Clear">
+                </form>
+                <br>
+                <select id='watches' size="10">
                 </select>
             </div>
         </div>
