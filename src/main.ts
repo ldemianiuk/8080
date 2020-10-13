@@ -3,6 +3,7 @@ import { e8080 } from './e8080';
 import { bdos } from './bdos';
 import 'index.scss';
 import * as Xterm from 'xterm';
+import * as Pako from 'pako';
 
 const emulator = new e8080();
 let term: Xterm.Terminal;
@@ -355,6 +356,20 @@ function download(filename: string, text: string) {
     document.body.removeChild(element);
 }
 
+function downloadBinary(filename: string, data: Uint8Array) {
+    const blob = new Blob([data], {type: 'octet/stream'});
+    const element = document.createElement('a');
+    element.setAttribute('href', URL.createObjectURL(blob));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+}
+
 function switchTrace(event: Event) {
     if ((event.target as HTMLInputElement).checked) {
         emulator.traceon = true;
@@ -363,6 +378,27 @@ function switchTrace(event: Event) {
         emulator.traceon = false;
         downloadTrace();
     }
+}
+
+function saveState(): void {
+    const state = emulator.saveState();
+    const json = JSON.stringify(state);
+    const arr = Uint8Array.from([...json].map(ch => ch.charCodeAt(0)));
+    const defl = Pako.deflate(json);
+    downloadBinary(`state ${formatDate(new Date())}.e80`, defl);
+}
+
+function loadState(event: Event): void {
+    console.log('load state');
+    const reader = new FileReader();
+    reader.onload = (txt) => {
+        const stateFile = <string>txt.target.result;
+        const infl = Pako.inflate(stateFile, {to: 'string'});
+        console.log(infl);
+        const state = JSON.parse(infl);
+        emulator.loadState(state);
+    };
+    reader.readAsBinaryString((event.target as HTMLInputElement).files[0]);
 }
 
 window.onload = function () {
@@ -391,6 +427,8 @@ window.onload = function () {
     document.getElementById('animate').onclick = () => run(1);
     document.getElementById('step').onclick = step;
     document.getElementById('reset').onclick = loadCode;
+    document.getElementById('savestate').onclick = saveState;
+    document.getElementById('loadstate').onchange = loadState;
     document.getElementById('setbreakpoint').onclick = setbreakpoint;
     document.getElementById('clearbreakpoint').onclick = clearbreakpoint;
     document.getElementById('removebreakpoint').onclick = removebreakpoint;

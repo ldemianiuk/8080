@@ -2,7 +2,6 @@ import { instructionTable, instructionSize, instructionCycles, instructionsDisas
 import { Subject } from 'rxjs';
 import { registerHandlers } from './instructionHandlers';
 
-
 class Flags {
     S: boolean;
     Z: boolean;
@@ -29,6 +28,14 @@ function HI(n: number): number {
 
 // eslint-disable-next-line no-unused-vars
 type Handler = (this: e8080, op: number, arg1?: number, arg2?: number) => void;
+
+type State = {
+    registers: number[];
+    sp: number;
+    pc: number;
+    status: Flags;
+    memory: number[];
+};
 
 
 export class e8080 {
@@ -247,6 +254,25 @@ export class e8080 {
     showFlags(): void {
         console.log('S:' + this.status.S + ' Z:' + this.status.Z + ' A:' + this.status.A + ' P:' + this.status.P + ' C:' + this.status.C);
     }
+
+    saveState(): State {
+        return {
+            registers: Array.from(this.registers),
+            pc: this.pc,
+            sp: this.sp,
+            status: {...this.status},
+            memory: Array.from(this.memory)
+        };
+    }
+
+    loadState(state: State): void {
+        this.registers = Uint8Array.from(state.registers);
+        this.pc = state.pc;
+        this.sp = state.sp;
+        this.status = {...state.status};
+        this.memory = Uint8Array.from(state.memory);
+    }
+
 
     static registerHandler(instr: string, handler: Handler): void {
         e8080.instructionHandlers[instr] = handler;
